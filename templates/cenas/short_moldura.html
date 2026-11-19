@@ -1,0 +1,137 @@
+{% extends "cenas/_base.html" %}
+{# Moldura do canal para Shorts de cortes (1080x1920):
+   topo com foto + @ do canal e crédito, gancho, "janela" transparente onde entra o vídeo horizontal
+   (o FFmpeg põe o vídeo por baixo) e fundo neutro com um brilho leve nas cores do canal.
+   Tudo fica fora das áreas cobertas pela interface do Shorts (20% de baixo e a lateral direita).
+   Modelos (dados.modelo): padrao = foto à esquerda | direita = foto à direita | centro = foto centralizada no topo. #}
+{% block fundo %}{% endblock %}
+{% block estilo %}
+:root {
+  --neutro: {{ dados.cor_fundo or "#000000" }};
+  --jx: {{ dados.janela.x }}px; --jy: {{ dados.janela.y }}px;
+  --jw: {{ dados.janela.w }}px; --jh: {{ dados.janela.h }}px;
+}
+/* a janela é transparente; a sombra gigante pinta o fundo neutro em volta dela */
+.janela {
+  position: absolute; left: var(--jx); top: var(--jy); width: var(--jw); height: var(--jh);
+  border-radius: 30px; box-shadow: 0 0 0 4000px var(--neutro); z-index: 1;
+}
+.borda-janela {
+  position: absolute; left: calc(var(--jx) - 2px); top: calc(var(--jy) - 2px);
+  width: calc(var(--jw) + 4px); height: calc(var(--jh) + 4px); border-radius: 32px; z-index: 2;
+  border: 2px solid rgba(255, 255, 255, .10);
+}
+.area { position: absolute; left: 0; right: 0; overflow: hidden; z-index: 3; }
+.area.cima { top: 0; height: calc(var(--jy) - 6px); }
+.area.baixo { top: calc(var(--jy) + var(--jh) + 6px); bottom: 0; }
+.brilho { position: absolute; border-radius: 50%; filter: blur(90px); }
+.cima .brilho { width: 900px; height: 520px; left: -220px; top: -160px;
+  background: color-mix(in srgb, var(--primaria) 34%, transparent); }
+.cima .brilho.b2 { width: 620px; height: 420px; left: 640px; top: 40px;
+  background: color-mix(in srgb, var(--secundaria) 12%, transparent); }
+.baixo .brilho { width: 1000px; height: 500px; left: 40px; bottom: -330px;
+  background: color-mix(in srgb, var(--primaria) 20%, transparent); }
+
+/* perfil: foto + @ + crédito */
+.perfil { position: absolute; left: var(--jx); right: 150px; top: 318px; display: flex; align-items: center; gap: 26px; }
+.foto {
+  width: 132px; height: 132px; border-radius: 50%; padding: 6px; flex: none;
+  background: conic-gradient(from 210deg, var(--secundaria), var(--primaria), var(--secundaria));
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .45);
+}
+.foto .img {
+  width: 100%; height: 100%; border-radius: 50%; border: 5px solid var(--neutro);
+  background-color: var(--primaria); background-size: cover; background-position: {{ dados.foco_foto or "45% 30%" }};
+  display: grid; place-items: center; color: #fff; font: 900 54px var(--fonte-titulo);
+}
+.nomes { min-width: 0; }
+.handle {
+  font: 800 50px/1.1 var(--fonte-corpo); color: #fff; letter-spacing: .005em;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.credito {
+  margin-top: 8px; font: 500 31px/1.2 var(--fonte-corpo); color: color-mix(in srgb, #fff 62%, transparent);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.credito::before {
+  content: ""; display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 12px;
+  vertical-align: 4px; background: var(--secundaria); box-shadow: 0 0 14px var(--secundaria);
+}
+
+/* gancho */
+.gancho {
+  position: absolute; left: var(--jx); right: 120px; top: 486px; height: calc(var(--jy) - 486px - 34px);
+  display: flex; align-items: flex-end;
+  font-family: var(--fonte-titulo); font-size: 76px; line-height: 1.06; color: #fff; text-transform: uppercase;
+  letter-spacing: .005em; text-wrap: balance;
+}
+.gancho .realce { color: var(--secundaria); }
+
+/* modelo "direita": foto e @ no lado direito, gancho alinhado à direita */
+.modelo-direita .perfil { left: 150px; right: calc(1080px - var(--jx) - var(--jw)); flex-direction: row-reverse; text-align: right; }
+.modelo-direita .gancho { left: 120px; right: calc(1080px - var(--jx) - var(--jw)); justify-content: flex-end; text-align: right; }
+
+/* modelo "centro": foto grande centralizada no topo, @ embaixo dela, gancho centralizado */
+.modelo-centro .perfil { left: 80px; right: 80px; top: 150px; flex-direction: column; gap: 14px; text-align: center; }
+.modelo-centro .foto { width: 168px; height: 168px; }
+.modelo-centro .nomes { max-width: 100%; }
+.modelo-centro .handle { font-size: 52px; }
+.modelo-centro .credito { font-size: 29px; }
+.modelo-centro .gancho { left: 70px; right: 70px; top: 500px; height: calc(var(--jy) - 500px - 30px); justify-content: center; text-align: center; }
+
+/* prévia no painel: imagem de exemplo no lugar do vídeo e uma legenda de amostra */
+.previa-video {
+  position: absolute; left: var(--jx); top: var(--jy); width: var(--jw); height: var(--jh); z-index: 0;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--primaria) 70%, #000), #101018 60%,
+              color-mix(in srgb, var(--secundaria) 45%, #000));
+  display: grid; place-items: center; color: rgba(255, 255, 255, .75); font: 800 44px var(--fonte-corpo);
+}
+.previa-video::before { content: "▶  SEU VÍDEO AQUI"; letter-spacing: .08em; }
+.previa-legenda {
+  position: absolute; left: 60px; right: 60px; top: {{ dados.legenda_y or 1312 }}px; z-index: 4; text-align: center;
+  font: 900 76px/1.1 var(--fonte-titulo); color: #fff; text-transform: uppercase;
+  -webkit-text-stroke: 10px #000; paint-order: stroke fill;
+}
+.previa-legenda b { color: var(--secundaria); }
+{% endblock %}
+{% block conteudo %}
+<div class="moldura modelo-{{ dados.modelo or 'padrao' }}">
+{% if dados.previa %}<div class="previa-video"></div><div class="previa-legenda">assim fica a <b>legenda</b></div>{% endif %}
+<div class="janela"></div>
+<div class="borda-janela"></div>
+<div class="area cima">{% if dados.brilho %}<div class="brilho"></div><div class="brilho b2"></div>{% endif %}
+  <div class="perfil">
+    <div class="foto"><div class="img" id="foto"></div></div>
+    <div class="nomes"><div class="handle" id="handle"></div><div class="credito" id="credito"></div></div>
+  </div>
+  <div class="gancho"><span id="gancho"></span></div>
+</div>
+<div class="area baixo">{% if dados.brilho %}<div class="brilho"></div>{% endif %}</div>
+</div>
+{% endblock %}
+{% block script %}
+window.prepararCena = function () {
+  const foto = document.getElementById("foto");
+  if (DADOS.foto) foto.style.backgroundImage = `url("${DADOS.foto}")`;
+  else foto.textContent = (DADOS.handle || "?").replace("@", "").slice(0, 1).toUpperCase();
+  document.getElementById("handle").textContent = DADOS.handle || "";
+  const credito = document.getElementById("credito");
+  credito.textContent = DADOS.credito || "";
+  if (!DADOS.credito) credito.style.display = "none";
+  // *palavra* no gancho fica na cor de destaque do canal
+  const gancho = document.getElementById("gancho");
+  String(DADOS.titulo || "").split(/(\*[^*]+\*)/).forEach((parte) => {
+    if (!parte) return;
+    if (parte.startsWith("*") && parte.endsWith("*")) {
+      const s = document.createElement("span"); s.className = "realce"; s.textContent = parte.slice(1, -1); gancho.append(s);
+    } else gancho.append(document.createTextNode(parte));
+  });
+};
+window.ajustarCena = function () {
+  const caixa = document.querySelector(".gancho"), alvo = document.getElementById("gancho");
+  let tamanho = 76;
+  while (tamanho > 44 && (alvo.scrollHeight > caixa.clientHeight || alvo.scrollWidth > caixa.clientWidth)) {
+    tamanho -= 2; caixa.style.fontSize = tamanho + "px";
+  }
+};
+{% endblock %}

@@ -1,0 +1,21 @@
+{% extends "thumbnails/_base.html" %}
+{# Template 3 — MOLDURA: foto com tinta e vinheta, frase central com contorno e brilho, tarja superior #}
+{% block estilo %}
+.tinta { position: absolute; inset: 0; background: radial-gradient(ellipse at center, rgba(0,0,0,.05) 30%, rgba(0,0,0,.8) 100%), linear-gradient(0deg, color-mix(in srgb, var(--primaria) 35%, transparent), transparent 55%); }
+.moldura { position: absolute; inset: 18px; border: 6px solid var(--secundaria); border-radius: 6px; }
+.tarja { position: absolute; left: 50%; top: 42px; transform: translateX(-50%) rotate(-1deg); background: var(--primaria); color: #fff; font-family: var(--fonte-titulo); font-size: 40px; letter-spacing: .08em; padding: 6px 28px; text-transform: uppercase; box-shadow: 0 10px 24px rgba(0,0,0,.5); white-space: nowrap; }
+.frase { position: absolute; left: 70px; right: 70px; top: 150px; height: 470px; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 140px; color: #fff;
+  -webkit-text-stroke: 5px #000; paint-order: stroke fill; text-shadow: 0 0 34px color-mix(in srgb, var(--primaria) 80%, transparent), 0 8px 0 rgba(0,0,0,.6); }
+.frase .realce { color: var(--secundaria); }
+{% endblock %}
+{% block conteudo %}
+<img class="foto" src="{{ dados.imagem }}" alt="">
+<div class="tinta"></div>
+<div class="moldura"></div>
+<div class="tarja" id="tarja"></div>
+<div class="frase" id="caixa"><div id="frase"></div></div>
+{% endblock %}
+{% block script %}
+window.prepararCena = function () { realcar(document.getElementById("frase"), DADOS.frase); document.getElementById("tarja").textContent = DADOS.canal || ""; };
+window.ajustarCena = function () { ajustarTexto(document.getElementById("caixa"), 140, 60); };
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends "cenas/_base.html" %}
+{# Citação: aspas gigantes, texto revelado palavra a palavra e autor #}
+{% block estilo %}
+.conteudo { position: absolute; left: 280px; right: 280px; top: 0; bottom: 0; display: flex; flex-direction: column; justify-content: center; gap: 40px; }
+.aspas { font-family: Georgia, 'DM Serif Display', serif; font-size: 360px; line-height: .6; height: 170px; color: var(--primaria); animation-name: zoomEntrada; animation-delay: .05s; transform-origin: left top; }
+.frase { font-family: var(--fonte-titulo); font-size: 92px; line-height: 1.12; max-height: 560px; overflow: hidden; }
+.frase .realce { color: var(--secundaria); }
+.autor { font-size: 42px; color: var(--texto-suave); letter-spacing: .08em; animation-name: deslizarEsq; }
+.autor::before { content: "— "; color: var(--primaria); }
+{% endblock %}
+{% block conteudo %}
+<div class="conteudo">
+  <div class="aspas anim">&ldquo;</div>
+  <div class="frase" id="frase"></div>
+  <div class="autor anim" id="autor"></div>
+</div>
+{% endblock %}
+{% block script %}
+window.prepararCena = function () {
+  const texto = DADOS.titulo || DADOS.destaque || "";
+  dividirPalavras(document.getElementById("frase"), texto, 0.4, 0.07, "surgir");
+  const autor = document.getElementById("autor");
+  autor.textContent = DADOS.autor || DADOS.subtitulo || "";
+  autor.style.animationDelay = (0.6 + texto.split(/\s+/).length * 0.07).toFixed(2) + "s";
+  if (!autor.textContent) autor.style.display = "none";
+};
+window.ajustarCena = function () { ajustarTexto(document.getElementById("frase"), 92, 48); };
+{% endblock %}

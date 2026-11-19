@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Esteira de Cortes</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/png" href="/static/icones/app-192.png">
+<link rel="apple-touch-icon" href="/static/icones/app-192.png">
+<meta name="theme-color" content="#150728">
+<link rel="preload" href="/fontes/Anton-Regular.ttf" as="font" type="font/ttf" crossorigin>
+<link rel="stylesheet" href="/static/estilo.css">
+<link rel="modulepreload" href="/static/js/base.js">
+<link rel="modulepreload" href="/static/js/estado.js">
+<link rel="modulepreload" href="/static/js/projetos.js">
+<link rel="modulepreload" href="/static/js/lives.js">
+<link rel="modulepreload" href="/static/js/fontes.js">
+<script type="module" src="/static/js/app.js"></script>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="palmeira" viewBox="0 0 120 200">
+    <path d="M58 200 C57 160 55 118 63 72 L69 72 C62 118 64 160 66 200 Z"/>
+    <path d="M66 72 C44 50 22 52 2 70 C26 58 46 62 66 80 Z"/>
+    <path d="M66 72 C90 48 110 50 120 66 C98 58 82 62 66 80 Z"/>
+    <path d="M66 74 C52 42 36 28 16 26 C38 36 50 52 62 80 Z"/>
+    <path d="M66 74 C80 40 96 26 114 24 C94 34 82 52 70 80 Z"/>
+    <path d="M66 74 C66 46 62 26 52 12 C68 26 72 48 70 80 Z"/>
+  </symbol>
+</svg>
+
+<!-- abertura animada: some assim que a sessão responde -->
+<div class="abertura" id="abertura" aria-hidden="true">
+  <div>
+    <div class="cena"><div class="sol"></div><div class="texto titulo-gta">Esteira de Cortes</div></div>
+    <div class="barra"></div>
+  </div>
+</div>
+
+<!-- entrar / primeiro acesso -->
+<div class="entrada oculto" id="entrada"></div>
+
+<div id="app" class="oculto">
+  <header class="topo">
+    <div class="marca">
+      <span class="icone"><svg width="26" height="26" viewBox="0 0 120 200" fill="url(#g)"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff2d95"/><stop offset="1" stop-color="#ffd23f"/></linearGradient></defs><use href="#palmeira"/></svg></span>
+      <span class="nome titulo-gta">Esteira de Cortes</span>
+    </div>
+    <nav class="abas" aria-label="Seções">
+      <a class="aba" data-aba="painel" href="#/painel">Painel</a>
+      <a class="aba" data-aba="canais" href="#/canais">Canais</a>
+      <a class="aba" data-aba="agendados" href="#/agendados">Agendados</a>
+      <a class="aba" data-aba="servicos" href="#/servicos">Serviços</a>
+      <a class="aba" data-aba="conta" href="#/conta">Conta</a>
+    </nav>
+    <div class="topo-direita">
+      <select id="seletor-canal" class="oculto" aria-label="Canal"></select>
+      <button class="canal-chip" id="canal-chip" type="button" title="Canal do YouTube vinculado">
+        <img id="canal-foto" class="oculto" alt=""><span class="rotulo" id="canal-chip-texto">Carregando…</span><span class="ponto"></span>
+      </button>
+      <details class="menu-usuario">
+        <summary aria-label="Sua conta"><span class="avatar-letra" id="usuario-letra">?</span></summary>
+        <div class="menu-caixa">
+          <strong id="usuario-nome"></strong>
+          <button class="botao pequeno cta oculto" id="btn-instalar" type="button">⬇ Instalar o app</button>
+          <a class="botao pequeno" href="#/conta">Minha conta</a>
+          <button class="botao pequeno perigo" id="btn-sair" type="button">Sair</button>
+        </div>
+      </details>
+    </div>
+  </header>
+  <div class="faixa-aviso oculto" id="sem-conexao" role="status">Sem conexão com o painel — tentando de novo…</div>
+
+  <main>
+    <!-- ======================= PAINEL ======================= -->
+    <div class="tela-aba" id="tela-painel">
+      <section class="heroi" aria-labelledby="titulo-lives">
+        <div class="ceu"></div><div class="sol"></div><div class="chao"></div>
+        <svg class="coqueiro c1" viewBox="0 0 120 200" aria-hidden="true"><use href="#palmeira"/></svg>
+        <svg class="coqueiro c2" viewBox="0 0 120 200" aria-hidden="true"><use href="#palmeira"/></svg>
+        <div class="conteudo">
+          <h1 class="titulo-gta" id="titulo-lives">Cortar uma live</h1>
+          <p>Cole o link da live da Twitch, da Kick ou do YouTube. A equipe baixa, acha os melhores momentos, edita com câmera em cima e jogo embaixo, legenda, põe música e deixa os Shorts prontos para postar no seu canal.</p>
+          <form class="form-link" id="form-link" novalidate>
+            <input id="link-live" type="url" inputmode="url" autocomplete="off" spellcheck="false" aria-label="Link da live"
+              placeholder="twitch.tv/videos/…  ·  kick.com/canal/videos/…  ·  youtube.com/watch?v=…">
+            <button class="botao cta" id="btn-link-live" type="submit">✂ Cortar este link</button>
+          </form>
+          <p class="pequeno">Ou escolha uma live dos <a href="#/canais">canais que você integrou</a> (Twitch, Kick ou YouTube, quantos quiser).</p>
+        </div>
+      </section>
+
+      <section aria-labelledby="titulo-projetos">
+        <div class="secao-topo"><h2 class="titulo-gta" id="titulo-projetos">Lives em produção <span class="contador" id="qtd-projetos">0</span></h2>
+          <a class="pequeno link-agendados oculto" id="link-agendados" href="#/agendados"></a></div>
+        <div class="projetos" id="lista-projetos"><div class="esqueleto" style="height:180px"></div></div>
+      </section>
+
+      <div class="duas">
+        <section class="card" aria-labelledby="titulo-agenda">
+          <h2 class="titulo-gta" id="titulo-agenda">Próximas publicações</h2>
+          <ul class="lista agenda" id="lista-agenda"></ul>
+          <p class="pequeno"><a href="#/agendados">Ver e gerenciar todos na aba Agendados →</a></p>
+        </section>
+        <section class="card" aria-labelledby="titulo-musicas">
+          <h2 class="titulo-gta" id="titulo-musicas">Músicas do canal</h2>
+          <p class="pequeno">As trilhas <span class="selo-original">ORIGINAL</span> foram compostas pela esteira: sem dono no Content ID, livres para monetizar. Você também pode enviar músicas livres (ex.: Biblioteca de Áudio do YouTube).</p>
+          <ul class="lista musicas" id="lista-musicas"></ul>
+          <div class="acoes">
+            <input type="text" id="credito-musica" placeholder="Crédito da música (se a licença pedir)" aria-label="Crédito da música">
+            <label class="botao pequeno turquesa" for="arquivo-musica">＋ Enviar música</label>
+            <input type="file" id="arquivo-musica" accept="audio/*" class="oculto">
+            <button class="botao pequeno" type="button" id="btn-compor">♫ Compor trilhas originais</button>
+          </div>
+        </section>
+      </div>
+
+      <section class="card" aria-labelledby="titulo-auto">
+        <h2 class="titulo-gta" id="titulo-auto">Modo automático</h2>
+        <div class="ajuste">
+          <div><strong>Vigiar os canais marcados na aba Canais e cortar lives novas sozinho</strong><span class="pequeno" id="texto-vigia"></span></div>
+          <label class="chave"><input type="checkbox" id="chave-vigia" aria-label="Vigiar o canal"><span></span></label>
+        </div>
+        <div class="ajuste">
+          <div><strong>Agendar sem eu revisar</strong><span class="pequeno" id="texto-revisao"></span></div>
+          <label class="chave"><input type="checkbox" id="chave-revisao" aria-label="Agendar sem revisar"><span></span></label>
+        </div>
+      </section>
+    </div>
+
+    <!-- ======================= CANAIS ======================= -->
+    <div class="tela-aba oculto" id="tela-canais">
+      <section class="heroi baixo">
+        <div class="ceu"></div><div class="sol"></div><div class="chao"></div>
+        <div class="conteudo">
+          <h1 class="titulo-gta">Canais das lives</h1>
+          <p>Integre quantos canais quiser (Twitch, Kick ou YouTube). As lives deles aparecem aqui para cortar, e o Modo automático vigia os que você marcar. O canal do YouTube conectado no topo serve só para postar os Shorts.</p>
+        </div>
+      </section>
+      <section class="card" aria-labelledby="titulo-integrar">
+        <h2 class="titulo-gta" id="titulo-integrar">Integrar um canal</h2>
+        <p class="pequeno">Cole o link do canal (ou de uma live dele). Corte só lives suas ou de criadores que permitem cortes.</p>
+        <div id="integrar-fonte"></div>
+      </section>
+      <section aria-labelledby="titulo-fontes">
+        <div class="secao-topo"><h2 class="titulo-gta" id="titulo-fontes">Canais integrados <span class="contador" id="qtd-fontes">0</span></h2></div>
+        <div class="fontes" id="lista-fontes"><div class="esqueleto" style="height:140px"></div></div>
+      </section>
+    </div>
+
+    <!-- ======================= AGENDADOS ======================= -->
+    <div class="tela-aba oculto" id="tela-agendados">
+      <section class="heroi baixo">
+        <div class="ceu"></div><div class="sol"></div><div class="chao"></div>
+        <div class="conteudo">
+          <h1 class="titulo-gta">Agendados</h1>
+          <p>Tudo o que já foi para o YouTube e o que está na fila de envio. Um Short por dia, no mesmo horário.</p>
+        </div>
+      </section>
+      <div id="agendados"><div class="esqueleto" style="height:180px"></div></div>
+    </div>
+
+    <!-- ======================= SERVIÇOS ======================= -->
+    <div class="tela-aba oculto" id="tela-servicos">
+      <section class="heroi baixo">
+        <div class="ceu"></div><div class="sol"></div><div class="chao"></div>
+        <div class="conteudo">
+          <h1 class="titulo-gta">Sua equipe</h1>
+          <p>Cada serviço é um especialista. Escolha quem trabalha agora e em qual live; você revisa e decide.</p>
+        </div>
+      </section>
+      <div class="vitrine" id="vitrine"></div>
+    </div>
+
+    <!-- ======================= CONTA ======================= -->
+    <div class="tela-aba oculto" id="tela-conta">
+      <div class="conta" id="conta"></div>
+    </div>
+  </main>
+</div>
+
+<dialog class="dialogo" id="dialogo-youtube">
+  <h2 class="titulo-gta">Canal do YouTube</h2>
+  <div id="youtube-corpo"></div>
+  <div class="acoes"><button class="botao" type="button" id="btn-fechar-youtube">Fechar</button></div>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>

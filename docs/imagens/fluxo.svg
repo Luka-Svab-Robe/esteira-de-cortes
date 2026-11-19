@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 200" width="1200" height="200" role="img" aria-label="Como a esteira trabalha: link da live, momentos, edição, legenda, textos, revisão e YouTube">
+  <defs>
+    <linearGradient id="fundo" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#150728"/>
+      <stop offset="1" stop-color="#2a0846"/>
+    </linearGradient>
+    <linearGradient id="trilho" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ff2d95"/>
+      <stop offset=".55" stop-color="#ff8a3d"/>
+      <stop offset="1" stop-color="#ffd23f"/>
+    </linearGradient>
+    <filter id="brilho" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="5" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <style>
+    .fluxo { stroke-dasharray: 10 10; animation: correr .8s linear infinite; }
+    @keyframes correr { to { stroke-dashoffset: -20; } }
+    .aceso { opacity: .12; animation: acender 7s ease-out infinite; }
+    @keyframes acender { 0% { opacity: 1; } 18% { opacity: .12; } 100% { opacity: .12; } }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } .aceso { opacity: .5; } }
+    text { font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; }
+  </style>
+
+  <rect width="1200" height="200" rx="22" fill="url(#fundo)"/>
+  <text x="40" y="42" font-size="15" font-weight="800" letter-spacing="2" fill="#ff8cc6">COMO A ESTEIRA TRABALHA</text>
+  <text x="1160" y="42" font-size="13" text-anchor="end" fill="#c8b3df">você só aprova  ✔</text>
+
+  <line class="fluxo" x1="100" y1="112" x2="1100" y2="112" stroke="url(#trilho)" stroke-width="3" stroke-linecap="round"/>
+
+  <g text-anchor="middle">
+    <g transform="translate(100 112)">
+      <rect x="-68" y="-34" width="136" height="68" rx="14" fill="#1c0a30" stroke="#5b3b7a"/>
+      <rect class="aceso" x="-68" y="-34" width="136" height="68" rx="14" fill="none" stroke="#ff2d95" stroke-width="3" filter="url(#brilho)"/>
+      <text y="-4" font-size="16" font-weight="800" fill="#fff">Link da live</text>
+      <text y="16" font-size="12" fill="#c8b3df">Twitch · Kick · YouTube</text>
+    </g>
+    <g transform="translate(266.7 112)">
+      <rect x="-68" y="-34" width="136" height="68" rx="14" fill="#1c0a30" stroke="#5b3b7a"/>
+      <rect class="aceso" style="animation-delay:1.1667s" x="-68" y="-34" width="136" height="68" rx="14" fill="none" stroke="#ff4f86" stroke-width="3" filter="url(#brilho)"/>
+      <text y="-4" font-size="16" font-weight="800" fill="#fff">Momentos</text>
+      <text y="16" font-size="12.5" fill="#c8b3df">a IA escolhe</text>
+    </g>
+    <g transform="translate(433.3 112)">
+      <rect x="-68" y="-34" width="136" height="68" rx="14" fill="#1c0a30" stroke="#5b3b7a"/>
+      <rect class="aceso" style="animation-delay:2.3333s" x="-68" y="-34" width="136" height="68" rx="14" fill="none" stroke="#ff6a6a" stroke-width="3" filter="url(#brilho)"/>
+      <text y="-4" font-size="16" font-weight="800" fill="#fff">Edição</text>
+      <text y="16" font-size="12.5" fill="#c8b3df">câmera + jogo</text>
+    </g>
+    <g transform="translate(600 112)">
+      <rect x="-68" y="-34" width="136" height="68" rx="14" fill="#1c0a30" stroke="#5b3b7a"/>
+      <rect class="aceso" style="animation-delay:3.5s" x="-68" y="-34" width="136" height="68" rx="14" fill="none" stroke="#ff8a3d" stroke-width="3" filter="url(#brilho)"/>
+      <text y="-4" font-size="16" font-weight="800" fill="#fff">Legenda</text>
+      <text y="16" font-size="12.5" fill="#c8b3df">palavra a palavra</text>
+    </g>
+    <g transform="translate(766.7 112)">
+      <rect x="-68" y="-34" width="136" height="68" rx="14" fill="#1c0a30" stroke="#5b3b7a"/>
+      <rect class="aceso" style="animation-delay:4.6667s" x="-68" y="-34" width="136" height="68" rx="14" fill="none" stroke="#ffa83a" stroke-width="3" filter="url(#brilho)"/>
+      <text y="-4" font-size="16" font-weight="800" fill="#fff">Textos</text>
+      <text y="16" font-size="12.5" fill="#c8b3df">título e tags</text>
+    </g>
+    <g transform="translate(933.3 112)">
+      <rect x="-68" y="-34" width="136" height="68" rx="14" fill="#1c0a30" stroke="#5b3b7a"/>
+      <rect class="aceso" style="animation-delay:5.8333s" x="-68" y="-34" width="136" height="68" rx="14" fill="none" stroke="#ffc23b" stroke-width="3" filter="url(#brilho)"/>
+      <text y="-4" font-size="16" font-weight="800" fill="#fff">Revisão</text>
+      <text y="16" font-size="12.5" fill="#c8b3df">você aprova</text>
+    </g>
+    <g transform="translate(1100 112)">
+      <rect x="-68" y="-34" width="136" height="68" rx="14" fill="#1c0a30" stroke="#5b3b7a"/>
+      <rect class="aceso" style="animation-delay:7s" x="-68" y="-34" width="136" height="68" rx="14" fill="none" stroke="#ffd23f" stroke-width="3" filter="url(#brilho)"/>
+      <text y="-4" font-size="16" font-weight="800" fill="#fff">YouTube</text>
+      <text y="16" font-size="12.5" fill="#c8b3df">Shorts agendados</text>
+    </g>
+  </g>
+
+  <circle r="7" fill="#fff" filter="url(#brilho)">
+    <animateMotion path="M100 112 H1100" dur="7s" repeatCount="indefinite"/>
+  </circle>
+  <text x="600" y="182" font-size="12.5" text-anchor="middle" fill="#9d86ba">e no Modo automático ela vigia os canais que você integrou e começa sozinha quando sai live nova</text>
+</svg>

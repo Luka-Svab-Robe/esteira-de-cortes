@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "painel",
+      "runtimeExecutable": ".venv/bin/python",
+      "runtimeArgs": ["esteira.py", "painel", "--sem-navegador"],
+      "port": 8765
+    },
+    {
+      "name": "painel-teste",
+      "runtimeExecutable": "env",
+      "runtimeArgs": ["PLATAFORMA_DADOS=dados/teste", ".venv/bin/python", "esteira.py", "painel", "--sem-navegador", "--porta", "8799"],
+      "port": 8799
+    }
+  ]
+}

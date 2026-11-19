@@ -1,0 +1,33 @@
+{% extends "cenas/_base.html" %}
+{# Lista animada: itens numerados entram em sequência #}
+{% block estilo %}
+.conteudo { position: absolute; left: 270px; right: 270px; top: 120px; bottom: 120px; display: flex; flex-direction: column; justify-content: center; gap: 40px; }
+.titulo { font-family: var(--fonte-titulo); font-size: 96px; text-transform: uppercase; line-height: 1; max-height: 210px; overflow: hidden; animation-name: subir; animation-delay: .1s; }
+.titulo::after { content: ""; display: block; width: 160px; height: 10px; margin-top: 22px; border-radius: 5px; background: var(--primaria); }
+.itens { display: flex; flex-direction: column; gap: 22px; }
+.item { display: flex; align-items: center; gap: 34px; background: color-mix(in srgb, var(--texto) 6%, transparent); border: 2px solid color-mix(in srgb, var(--texto) 10%, transparent); border-radius: 22px; padding: 20px 34px; animation-name: deslizarEsq; }
+.item .n { flex: 0 0 76px; height: 76px; border-radius: 50%; background: var(--primaria); color: var(--fundo); font-family: var(--fonte-titulo); font-size: 44px; display: flex; align-items: center; justify-content: center; }
+.item .t { font-size: 48px; font-weight: 600; line-height: 1.15; }
+{% endblock %}
+{% block conteudo %}
+<div class="conteudo">
+  <div class="titulo anim" id="titulo"></div>
+  <div class="itens" id="itens"></div>
+</div>
+{% endblock %}
+{% block script %}
+window.prepararCena = function () {
+  document.getElementById("titulo").textContent = DADOS.titulo || DADOS.destaque || "";
+  const itens = (DADOS.itens || []).filter(Boolean).slice(0, 5);
+  const caixa = document.getElementById("itens");
+  itens.forEach(function (texto, i) {
+    const el = document.createElement("div");
+    el.className = "item anim";
+    el.style.animationDelay = (0.55 + i * 0.38).toFixed(2) + "s";
+    const n = document.createElement("div"); n.className = "n"; n.textContent = i + 1;
+    const t = document.createElement("div"); t.className = "t"; t.textContent = texto;
+    el.appendChild(n); el.appendChild(t); caixa.appendChild(el);
+  });
+  if (itens.length >= 5) document.querySelectorAll(".item .t").forEach(function (e) { e.style.fontSize = "40px"; });
+};
+{% endblock %}

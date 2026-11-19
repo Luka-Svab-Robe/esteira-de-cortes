@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 360" width="900" height="360" role="img" aria-label="Exemplo: a IA de terminal instala a Esteira de Cortes sozinha a partir de um pedido em português">
+  <style>
+    text { font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace; font-size: 17px; }
+    .l { opacity: 0; animation: aparecer 16s ease-out infinite both; }
+    @keyframes aparecer { 0% { opacity: 0; transform: translateY(6px); } 3% { opacity: 1; transform: none; } 88% { opacity: 1; } 93%, 100% { opacity: 0; } }
+    .cursor { animation: piscar 1s steps(1) infinite; }
+    @keyframes piscar { 50% { opacity: 0; } }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } .l { opacity: 1; } }
+  </style>
+  <rect width="900" height="360" rx="16" fill="#0d0618"/>
+  <rect width="900" height="44" rx="16" fill="#1c0a30"/>
+  <rect y="28" width="900" height="16" fill="#1c0a30"/>
+  <circle cx="26" cy="22" r="7" fill="#ff5f57"/>
+  <circle cx="50" cy="22" r="7" fill="#febc2e"/>
+  <circle cx="74" cy="22" r="7" fill="#28c840"/>
+  <text x="450" y="28" text-anchor="middle" font-size="14" fill="#9d86ba">esteira-de-cortes — Claude Code · Codex · Gemini CLI</text>
+
+  <text class="l" x="28" y="86" fill="#19e3d6">~/esteira-de-cortes $ <tspan fill="#ffffff">claude</tspan></text>
+  <text class="l" style="animation-delay:1.2s" x="28" y="122" fill="#ff8cc6">&gt; Instale a Esteira de Cortes neste PC e abra o app. Fale em português.</text>
+  <text class="l" style="animation-delay:2.6s" x="28" y="160" fill="#c8b3df">● Lendo o manual do projeto (AGENTS.md)…</text>
+  <text class="l" style="animation-delay:3.8s" x="28" y="192" fill="#3ddc84">✔ <tspan fill="#ffe9f6">Ambiente Python criado (.venv)</tspan></text>
+  <text class="l" style="animation-delay:5s" x="28" y="224" fill="#3ddc84">✔ <tspan fill="#ffe9f6">Dependências, FFmpeg, fontes e Chromium prontos</tspan></text>
+  <text class="l" style="animation-delay:6.2s" x="28" y="256" fill="#3ddc84">✔ <tspan fill="#ffe9f6">Voz neural e legendas (modelos locais) baixadas</tspan></text>
+  <text class="l" style="animation-delay:7.4s" x="28" y="288" fill="#3ddc84">✔ <tspan fill="#ffe9f6">Diagnóstico sem pendências</tspan></text>
+  <text class="l" style="animation-delay:8.6s" x="28" y="320" fill="#ffd23f">★ <tspan fill="#ffe9f6">App aberto em </tspan><tspan fill="#19e3d6" text-decoration="underline">http://127.0.0.1:8765</tspan><tspan fill="#ffe9f6"> — crie sua conta!</tspan></text>
+  <rect class="cursor" x="28" y="334" width="10" height="4" fill="#ffd23f"/>
+</svg>

@@ -1,0 +1,31 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+credenciais/*.json
+canais/*/credenciais/
+canais/*/historico.db
+canais/*/.worker.lock
+canais/_teste_fumaca/
+projetos/
+modelos/
+logs/
+automacao/
+assets/fontes/*.ttf
+
+# plataforma multiusuário: banco de contas e chave que cifra as conexões
+dados/
+
+# instalador do Windows: ferramentas baixadas (NSIS) e saída gerada
+instalador/ferramentas/
+dist/
+instalador/build/
+
+# dados pessoais de cada instalação (nunca vão para o GitHub)
+# cada canal criado (identidade, @, links, fila, trilhas, credenciais); só canais/LEIA-ME.md é publicado
+canais/*/
+canais/*/fontes.yaml
+canais/*/fila_processados.txt
+canais/*/shorts_publicados.json
+site/
+.vscode/

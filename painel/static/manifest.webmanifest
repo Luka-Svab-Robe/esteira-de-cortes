@@ -1,0 +1,22 @@
+{
+  "id": "/",
+  "name": "Esteira de Cortes",
+  "short_name": "Cortes",
+  "description": "Cortes de lives para Shorts: a equipe baixa, escolhe os momentos, edita, legenda e agenda.",
+  "lang": "pt-BR",
+  "start_url": "/#/painel",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0b0418",
+  "theme_color": "#150728",
+  "icons": [
+    { "src": "/static/icones/app-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/static/icones/app-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/static/icones/app-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Painel", "url": "/#/painel" },
+    { "name": "Serviços da equipe", "url": "/#/servicos" },
+    { "name": "Minha conta", "url": "/#/conta" }
+  ]
+}

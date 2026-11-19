@@ -1,0 +1,191 @@
+{% extends "cenas/_base.html" %}
+{# Cena ilustrada 2D procedural: céu, astro, 3 camadas com parallax, partículas e ícone central.
+   Cenários: montanhas, floresta, deserto, oceano, cidade, espaco, laboratorio, historia. #}
+{% block fundo %}{% endblock %}
+{% block estilo %}
+svg.cena { position: absolute; inset: 0; width: 100%; height: 100%; }
+.legenda { position: absolute; left: 270px; bottom: 130px; max-width: 900px; font-family: var(--fonte-titulo); font-size: 92px; line-height: 1.02; text-transform: uppercase; color: var(--texto); text-shadow: 0 8px 30px rgba(0,0,0,.6); animation-name: subir; animation-delay: .5s; }
+.legenda::before { content: ""; display: block; width: 140px; height: 10px; border-radius: 5px; background: var(--primaria); margin-bottom: 24px; }
+.legenda:empty { display: none; }
+{% endblock %}
+{% block conteudo %}
+<svg class="cena" id="cena" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"></svg>
+<div class="legenda anim" id="legenda"></div>
+{% endblock %}
+{% block script %}
+const W = 1920, H = 1080, LARGO = W + 700;
+const P = TEMA.paleta;
+const rnd = aleatorio(DADOS.semente || 7);
+const r = (a, b) => a + (b - a) * rnd();
+const escuro = (c, t) => misturar(c, "#000000", t);
+const ceuTopo = escuro(P.fundo, 0.2), ceuBase = misturar(P.primaria, P.fundo, 0.62);
+const tons = [misturar(P.primaria, P.fundo, 0.72), misturar(P.primaria, P.fundo, 0.84), escuro(P.fundo, 0.35)];
+const camadas = { longe: [], meio: [], perto: [], fixo: [], astro: [], particulas: [] };
+
+function poli(pontos, cor, extra) { return '<polygon points="' + pontos.map(function (p) { return p[0].toFixed(1) + "," + p[1].toFixed(1); }).join(" ") + '" fill="' + cor + '" ' + (extra || "") + "/>"; }
+function montanhas(base, amp, n, cor, neve) {
+  const pts = [[0, H]], passo = LARGO / n; let svg = "";
+  for (let i = 0; i <= n; i++) {
+    const x = i * passo, pico = i % 2 === 1;
+    const y = pico ? base - amp * r(0.6, 1) : base - amp * r(0.05, 0.35);
+    pts.push([x, y]);
+    if (neve && pico) svg += poli([[x - passo * 0.22, y + amp * 0.18], [x, y], [x + passo * 0.22, y + amp * 0.18]], misturar(P.texto, cor, 0.35));
+  }
+  pts.push([LARGO, H]);
+  return poli(pts, cor) + svg;
+}
+function dunas(base, amp, n, cor) {
+  let d = "M0," + H + " L0," + base, passo = LARGO / n;
+  for (let i = 0; i < n; i++) { const x = i * passo; d += " Q" + (x + passo / 2).toFixed(0) + "," + (base - amp * r(0.4, 1)).toFixed(0) + " " + (x + passo).toFixed(0) + "," + (base - amp * r(0, 0.25)).toFixed(0); }
+  return '<path d="' + d + " L" + LARGO + "," + H + ' Z" fill="' + cor + '"/>';
+}
+function arvores(base, alt, n, cor) {
+  let svg = "";
+  for (let i = 0; i < n; i++) {
+    const x = r(0, LARGO), h = alt * r(0.6, 1.1), w = h * 0.42, y = base + r(-15, 25);
+    for (let k = 0; k < 3; k++) { const yy = y - h * (0.28 + k * 0.26); svg += poli([[x - w * (1 - k * 0.22) / 2, yy + h * 0.32], [x, yy - h * 0.22], [x + w * (1 - k * 0.22) / 2, yy + h * 0.32]], cor); }
+    svg += '<rect x="' + (x - 6) + '" y="' + (y - h * 0.08) + '" width="12" height="' + (h * 0.12) + '" fill="' + cor + '"/>';
+  }
+  return svg + '<rect x="0" y="' + base + '" width="' + LARGO + '" height="' + (H - base) + '" fill="' + cor + '"/>';
+}
+function predios(base, alt, cor, janelas) {
+  let svg = "", x = 0;
+  while (x < LARGO) {
+    const w = r(70, 170), h = alt * r(0.35, 1);
+    svg += '<rect x="' + x.toFixed(0) + '" y="' + (base - h).toFixed(0) + '" width="' + w.toFixed(0) + '" height="' + (h + H - base).toFixed(0) + '" fill="' + cor + '"/>';
+    if (janelas) for (let jy = base - h + 22; jy < base - 18; jy += 34) for (let jx = x + 14; jx < x + w - 18; jx += 28)
+      if (rnd() < 0.32) svg += '<rect class="janela" x="' + jx.toFixed(0) + '" y="' + jy.toFixed(0) + '" width="12" height="16" fill="' + P.secundaria + '" opacity="' + r(0.35, 0.9).toFixed(2) + '"/>';
+    x += w + r(4, 22);
+  }
+  return svg;
+}
+function ondas(base, amp, comp, cor) {
+  let d = "M0," + H + " L0," + base;
+  for (let x = 0; x <= LARGO; x += 20) d += " L" + x + "," + (base + Math.sin(x / comp * 2 * Math.PI) * amp).toFixed(1);
+  return '<path d="' + d + " L" + LARGO + "," + H + ' Z" fill="' + cor + '"/>';
+}
+function piramides(base, cor) {
+  let svg = "";
+  [[420, 330], [880, 470], [1380, 260], [2050, 380]].forEach(function (p) { svg += poli([[p[0] - p[1], base], [p[0], base - p[1] * 0.95], [p[0] + p[1], base]], cor) + poli([[p[0], base - p[1] * 0.95], [p[0] + p[1], base], [p[0] + p[1] * 0.3, base]], escuro(cor, 0.25)); });
+  return svg;
+}
+function castelo(base, cor) {
+  let svg = '<rect x="560" y="' + (base - 260) + '" width="760" height="' + (H - base + 260) + '" fill="' + cor + '"/>';
+  [[500, 420, 150], [880, 520, 170], [1300, 440, 150]].forEach(function (t) {
+    svg += '<rect x="' + t[0] + '" y="' + (base - t[1]) + '" width="' + t[2] + '" height="' + (t[1] + H - base) + '" fill="' + cor + '"/>';
+    for (let k = 0; k < 4; k++) svg += '<rect x="' + (t[0] + k * t[2] / 3.5) + '" y="' + (base - t[1] - 34) + '" width="' + (t[2] / 7) + '" height="36" fill="' + cor + '"/>';
+    svg += '<rect x="' + (t[0] + t[2] / 2 - 14) + '" y="' + (base - t[1] + 70) + '" width="28" height="56" rx="14" fill="' + P.secundaria + '" opacity=".75"/>';
+  });
+  return svg;
+}
+function colunas(base, cor) {
+  let svg = "";
+  for (let x = 60; x < LARGO; x += 330) svg += '<rect x="' + x + '" y="' + (base - 520) + '" width="70" height="' + (H - base + 520) + '" fill="' + cor + '"/><rect x="' + (x - 18) + '" y="' + (base - 540) + '" width="106" height="30" fill="' + cor + '"/>';
+  return svg;
+}
+function hexagonos(cor) {
+  let svg = "";
+  for (let y = 0; y < H + 100; y += 104) for (let x = (y / 104) % 2 ? 60 : 0; x < LARGO; x += 120) {
+    const pts = []; for (let k = 0; k < 6; k++) { const a = Math.PI / 3 * k + Math.PI / 6; pts.push([x + 52 * Math.cos(a), y + 52 * Math.sin(a)]); }
+    svg += poli(pts, "none", 'stroke="' + cor + '" stroke-width="2" opacity=".35"');
+  }
+  return svg;
+}
+function frascos(base, cor) {
+  let svg = "";
+  for (let x = 120; x < LARGO; x += r(260, 380)) {
+    const h = r(160, 260);
+    svg += '<rect x="' + (x + 30) + '" y="' + (base - h) + '" width="40" height="' + (h * 0.45) + '" fill="' + cor + '"/>' + poli([[x - 40, base], [x + 30, base - h * 0.56], [x + 70, base - h * 0.56], [x + 140, base]], cor);
+    svg += poli([[x - 18, base - 8], [x + 28, base - h * 0.32], [x + 72, base - h * 0.32], [x + 118, base - 8]], P.secundaria, 'opacity=".35"');
+  }
+  return svg + '<rect x="0" y="' + base + '" width="' + LARGO + '" height="' + (H - base) + '" fill="' + cor + '"/>';
+}
+function estrelas(n) { let s = ""; for (let i = 0; i < n; i++) s += '<circle class="estrela" cx="' + r(0, W).toFixed(0) + '" cy="' + r(0, H * 0.62).toFixed(0) + '" r="' + r(0.8, 2.6).toFixed(1) + '" fill="' + P.texto + '" data-f="' + r(0.5, 2.5).toFixed(2) + '" data-o="' + r(0.2, 0.9).toFixed(2) + '"/>'; return s; }
+/* halos por gradiente radial: muito mais leve de renderizar que feGaussianBlur a cada quadro */
+const HALOS = {};
+function halo(cor) {
+  const id = "halo" + String(cor).replace("#", "");
+  HALOS[id] = '<radialGradient id="' + id + '"><stop offset="0" stop-color="' + cor + '" stop-opacity=".35"/><stop offset=".45" stop-color="' + cor + '" stop-opacity=".12"/><stop offset="1" stop-color="' + cor + '" stop-opacity="0"/></radialGradient>';
+  return "url(#" + id + ")";
+}
+function astro(x, y, raio, cor, anel) {
+  let s = '<circle cx="' + x + '" cy="' + y + '" r="' + raio * 2.6 + '" fill="' + halo(cor) + '"/><circle cx="' + x + '" cy="' + y + '" r="' + raio + '" fill="' + cor + '"/>';
+  if (anel) s += '<ellipse cx="' + x + '" cy="' + y + '" rx="' + raio * 1.9 + '" ry="' + raio * 0.42 + '" fill="none" stroke="' + P.secundaria + '" stroke-width="10" opacity=".7" transform="rotate(-18 ' + x + " " + y + ')"/>';
+  return s;
+}
+function particulas(n, tipo) { let s = ""; for (let i = 0; i < n; i++) s += '<circle class="part" cx="' + r(0, W) + '" cy="' + r(0, H) + '" r="' + (tipo === "nevoa" ? r(60, 160) : r(2, 6)).toFixed(1) + '" fill="' + (tipo === "brasa" ? P.secundaria : P.texto) + '" opacity="' + (tipo === "nevoa" ? 0.22 : r(0.15, 0.5)).toFixed(2) + '" data-v="' + r(8, 40).toFixed(1) + '" data-t="' + tipo + '"' + (tipo === "nevoa" ? ' style="fill:url(#nevoa)"' : "") + "/>"; return s; }
+
+const ICONES = {
+  lupa: '<circle cx="-20" cy="-20" r="72"/><line x1="32" y1="32" x2="110" y2="110"/>',
+  olho: '<path d="M-120,0 Q0,-90 120,0 Q0,90 -120,0 Z"/><circle cx="0" cy="0" r="36" class="cheio"/>',
+  interrogacao: '<path d="M-55,-60 Q-55,-120 0,-120 Q60,-120 60,-65 Q60,-25 10,0 Q0,8 0,40"/><circle cx="0" cy="95" r="12" class="cheio"/>',
+  raio: '<polygon points="-30,-120 50,-120 5,-15 60,-15 -45,125 -10,15 -65,15"/>',
+  atomo: '<ellipse rx="120" ry="42"/><ellipse rx="120" ry="42" transform="rotate(60)"/><ellipse rx="120" ry="42" transform="rotate(120)"/><circle r="18" class="cheio"/>',
+  coroa: '<polygon points="-115,65 -115,-45 -58,8 0,-80 58,8 115,-45 115,65"/><line x1="-115" y1="95" x2="115" y2="95"/>',
+  livro: '<path d="M0,-70 Q-60,-95 -125,-70 L-125,85 Q-60,62 0,85 Q60,62 125,85 L125,-70 Q60,-95 0,-70 Z"/><line x1="0" y1="-70" x2="0" y2="85"/>',
+  globo: '<circle r="105"/><ellipse rx="48" ry="105"/><line x1="-105" y1="0" x2="105" y2="0"/><path d="M-92,-50 Q0,-30 92,-50 M-92,50 Q0,30 92,50"/>',
+  relogio: '<circle r="105"/><line class="ponteiro-h" x1="0" y1="0" x2="0" y2="-55"/><line class="ponteiro-m" x1="0" y1="0" x2="0" y2="-85"/><circle r="10" class="cheio"/>',
+  cadeado: '<rect x="-75" y="-10" width="150" height="120" rx="16"/><path d="M-48,-10 V-55 A48,48 0 0 1 48,-55 V-10"/><circle cx="0" cy="45" r="12" class="cheio"/>',
+  caveira: '<path d="M-80,10 Q-90,-110 0,-112 Q90,-110 80,10 Q70,45 45,50 L45,90 L-45,90 L-45,50 Q-70,45 -80,10 Z"/><circle cx="-34" cy="-20" r="22" class="cheio"/><circle cx="34" cy="-20" r="22" class="cheio"/><line x1="-15" y1="90" x2="-15" y2="62"/><line x1="15" y1="90" x2="15" y2="62"/>',
+  foguete: '<path d="M0,-125 C45,-85 45,20 32,65 L-32,65 C-45,20 -45,-85 0,-125 Z"/><circle cx="0" cy="-35" r="20"/><polygon points="-32,25 -75,85 -32,65"/><polygon points="32,25 75,85 32,65"/><path class="chama" d="M-20,72 Q0,150 20,72" stroke-width="8"/>',
+  dinheiro: '<circle r="105"/><path d="M40,-45 Q30,-65 0,-65 Q-45,-65 -45,-30 Q-45,0 0,0 Q45,0 45,32 Q45,65 0,65 Q-32,65 -42,45 M0,-90 V90"/>',
+  cerebro: '<path d="M0,-90 C-60,-102 -112,-52 -102,0 C-122,42 -80,92 -30,80 C-10,102 10,102 30,80 C80,92 122,42 102,0 C112,-52 60,-102 0,-90 Z"/><path d="M0,-90 V90 M-60,-40 Q-30,-20 -60,10 M60,-40 Q30,-20 60,10"/>',
+};
+
+const CENARIOS = {
+  montanhas: function () { camadas.astro.push(estrelas(140), astro(430, 230, 82, P.secundaria)); camadas.longe.push(montanhas(720, 360, 9, tons[0], true)); camadas.meio.push(montanhas(820, 260, 12, tons[1])); camadas.perto.push(arvores(930, 220, 34, tons[2])); camadas.particulas.push(particulas(10, "nevoa")); },
+  floresta: function () { camadas.astro.push(estrelas(80), astro(380, 220, 70, P.secundaria)); camadas.longe.push(montanhas(700, 250, 10, tons[0])); camadas.meio.push(arvores(820, 260, 40, tons[1])); camadas.perto.push(arvores(960, 330, 26, tons[2])); camadas.particulas.push(particulas(14, "nevoa"), particulas(40, "poeira")); },
+  deserto: function () { camadas.astro.push(astro(500, 300, 150, P.secundaria)); camadas.longe.push(dunas(760, 120, 6, tons[0])); camadas.meio.push(piramides(860, tons[1])); camadas.perto.push(dunas(960, 90, 5, tons[2])); camadas.particulas.push(particulas(60, "poeira")); },
+  oceano: function () { camadas.astro.push(estrelas(120), astro(420, 230, 90, P.texto)); camadas.longe.push(ondas(720, 10, 260, tons[0])); camadas.meio.push(ondas(820, 18, 340, tons[1])); camadas.perto.push(ondas(940, 26, 420, tons[2])); camadas.particulas.push(particulas(40, "bolha")); },
+  cidade: function () { camadas.astro.push(estrelas(120), astro(330, 200, 70, P.texto)); camadas.longe.push(predios(760, 420, tons[0], false)); camadas.meio.push(predios(860, 360, tons[1], true)); camadas.perto.push(predios(1000, 230, tons[2], true)); camadas.particulas.push(particulas(12, "nevoa")); },
+  espaco: function () { camadas.astro.push(estrelas(420)); camadas.longe.push(astro(2000, 180, 50, tons[0]), astro(980, 160, 30, P.secundaria)); camadas.meio.push(astro(560, 360, 190, misturar(P.primaria, P.fundo, 0.35), true)); for (let i = 0; i < 9; i++) camadas.perto.push(astro(r(0, LARGO), r(700, 1050), r(14, 46), tons[2])); },
+  laboratorio: function () { camadas.longe.push(hexagonos(misturar(P.primaria, P.fundo, 0.4))); camadas.meio.push('<g opacity=".55">' + Object.keys([0, 1, 2, 3]).map(function () { return '<g transform="translate(' + r(100, LARGO).toFixed(0) + "," + r(150, 650).toFixed(0) + ') scale(' + r(0.4, 0.8).toFixed(2) + ')" fill="none" stroke="' + P.secundaria + '" stroke-width="5">' + ICONES.atomo.replace('class="cheio"', 'fill="' + P.secundaria + '"') + "</g>"; }).join("") + "</g>"); camadas.perto.push(frascos(960, tons[2])); camadas.particulas.push(particulas(40, "bolha")); },
+  historia: function () { camadas.astro.push(estrelas(90), astro(400, 220, 80, P.secundaria)); camadas.longe.push(montanhas(760, 240, 8, tons[0])); camadas.meio.push(castelo(880, tons[1])); camadas.perto.push(colunas(1000, tons[2])); camadas.particulas.push(particulas(50, "brasa")); },
+};
+
+window.prepararCena = function () {
+  (CENARIOS[DADOS.cenario] || CENARIOS.montanhas)();
+  const haloIcone = halo(P.secundaria);  // registra o gradiente ANTES de montar o <defs>
+  const icone = ICONES[DADOS.icone] || ICONES.interrogacao;
+  const svg = document.getElementById("cena");
+  svg.innerHTML =
+    '<defs><linearGradient id="ceu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + ceuTopo + '"/><stop offset="1" stop-color="' + ceuBase + '"/></linearGradient>' +
+    '<radialGradient id="nevoa"><stop offset="0" stop-color="' + P.texto + '" stop-opacity=".45"/><stop offset="1" stop-color="' + P.texto + '" stop-opacity="0"/></radialGradient>' +
+    Object.values(HALOS).join("") +
+    '<radialGradient id="vinheta" cx=".5" cy=".5" r=".75"><stop offset=".6" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".65"/></radialGradient></defs>' +
+    '<rect width="' + W + '" height="' + H + '" fill="url(#ceu)"/>' +
+    '<g id="c-astro">' + camadas.astro.join("") + '</g><g id="c-longe">' + camadas.longe.join("") + '</g>' +
+    '<g id="c-meio">' + camadas.meio.join("") + '</g><g id="c-perto">' + camadas.perto.join("") + '</g>' +
+    '<g id="c-part">' + camadas.particulas.join("") + '</g>' +
+    '<circle id="halo-icone" r="300" fill="' + haloIcone + '"/>' +
+    '<g id="icone" fill="none" stroke="' + P.secundaria + '" stroke-linecap="round" stroke-linejoin="round">' +
+      '<g stroke-width="30" opacity=".22">' + icone.replace(/class="cheio"/g, 'fill="' + P.secundaria + '"') + '</g>' +
+      '<g stroke-width="11">' + icone.replace(/class="cheio"/g, 'fill="' + P.secundaria + '"') + '</g></g>' +
+    '<rect width="' + W + '" height="' + H + '" fill="url(#vinheta)"/>';
+  document.getElementById("legenda").textContent = DADOS.texto || "";
+};
+const lado = 1400;  // ícone à direita; astros ficam à esquerda e a legenda embaixo à esquerda
+aoTempo(function (t) {
+  document.getElementById("c-longe").setAttribute("transform", "translate(" + (-t * 7).toFixed(2) + ",0)");
+  document.getElementById("c-meio").setAttribute("transform", "translate(" + (-t * 18).toFixed(2) + ",0)");
+  document.getElementById("c-perto").setAttribute("transform", "translate(" + (-t * 38).toFixed(2) + ",0)");
+  document.getElementById("c-astro").setAttribute("transform", "translate(" + (-t * 2).toFixed(2) + "," + (t * 1.5).toFixed(2) + ")");
+  document.querySelectorAll(".estrela").forEach(function (e) { e.setAttribute("opacity", (Number(e.dataset.o) * (0.6 + 0.4 * Math.sin(t * Number(e.dataset.f) * 2))).toFixed(3)); });
+  document.querySelectorAll(".part").forEach(function (e) {
+    const v = Number(e.dataset.v), tipo = e.dataset.t;
+    if (tipo === "bolha" || tipo === "brasa") e.setAttribute("transform", "translate(" + (Math.sin(t + v) * 12).toFixed(1) + "," + (-t * v * 2).toFixed(1) + ")");
+    else e.setAttribute("transform", "translate(" + (t * v).toFixed(1) + "," + (Math.sin(t * 0.5 + v) * 8).toFixed(1) + ")");
+  });
+  const entrada = desacelerar(progresso(t, 0.15, 0.9));
+  const escala = (0.55 + 0.45 * entrada) * (1 + 0.03 * Math.sin(t * 2.2));
+  const icone = document.getElementById("icone");
+  const yIcone = (500 + Math.sin(t * 1.6) * 14).toFixed(1);
+  icone.setAttribute("transform", "translate(" + lado + "," + yIcone + ") scale(" + (1.55 * escala).toFixed(3) + ")");
+  icone.setAttribute("opacity", entrada.toFixed(3));
+  const haloIcone = document.getElementById("halo-icone");
+  haloIcone.setAttribute("transform", "translate(" + lado + "," + yIcone + ")");
+  haloIcone.setAttribute("opacity", (entrada * (0.8 + 0.2 * Math.sin(t * 2.2))).toFixed(3));
+  const h = icone.querySelector(".ponteiro-h"), m = icone.querySelector(".ponteiro-m");
+  if (h) { h.setAttribute("transform", "rotate(" + (t * 30) + ")"); m.setAttribute("transform", "rotate(" + (t * 360 / 4) + ")"); }
+});
+{% endblock %}

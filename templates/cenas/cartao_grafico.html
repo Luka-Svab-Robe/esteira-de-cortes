@@ -1,0 +1,46 @@
+{% extends "cenas/_base.html" %}
+{# Gráfico de barras dinâmico: barras crescem e valores contam #}
+{% block estilo %}
+.conteudo { position: absolute; left: 260px; right: 260px; top: 110px; bottom: 100px; display: flex; flex-direction: column; gap: 30px; }
+.titulo { font-family: var(--fonte-titulo); font-size: 84px; text-transform: uppercase; line-height: 1.02; max-height: 190px; overflow: hidden; animation-name: subir; animation-delay: .1s; }
+.grafico { flex: 1; display: flex; align-items: flex-end; gap: 46px; padding: 0 20px 0; border-bottom: 4px solid color-mix(in srgb, var(--texto) 25%, transparent); position: relative; }
+.coluna { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; gap: 16px; }
+.valor { font-family: var(--fonte-titulo); font-size: 56px; color: var(--texto); }
+.barra { width: 100%; max-width: 230px; border-radius: 18px 18px 0 0; background: linear-gradient(180deg, var(--primaria), color-mix(in srgb, var(--primaria) 55%, var(--fundo))); transform-origin: bottom; box-shadow: 0 0 40px color-mix(in srgb, var(--primaria) 35%, transparent); }
+.coluna.maior .barra { background: linear-gradient(180deg, var(--secundaria), color-mix(in srgb, var(--secundaria) 55%, var(--fundo))); }
+.rotulos { display: flex; gap: 46px; padding: 0 20px; }
+.rotulo { flex: 1; text-align: center; font-size: 34px; font-weight: 600; color: var(--texto-suave); line-height: 1.15; animation-name: surgir; animation-delay: .6s; }
+{% endblock %}
+{% block conteudo %}
+<div class="conteudo">
+  <div class="titulo anim" id="titulo"></div>
+  <div class="grafico" id="grafico"></div>
+  <div class="rotulos" id="rotulos"></div>
+</div>
+{% endblock %}
+{% block script %}
+const BARRAS = (DADOS.barras || []).filter(function (b) { return b && isFinite(Number(b.valor)); }).slice(0, 6);
+const MAXIMO = Math.max.apply(null, BARRAS.map(function (b) { return Math.abs(Number(b.valor)); }).concat([1]));
+const decimais = function (v) { return Math.abs(v) < 10 && v % 1 !== 0 ? 1 : 0; };
+window.prepararCena = function () {
+  document.getElementById("titulo").textContent = DADOS.titulo || DADOS.destaque || "";
+  const g = document.getElementById("grafico"), r = document.getElementById("rotulos");
+  BARRAS.forEach(function (b, i) {
+    const col = document.createElement("div");
+    col.className = "coluna" + (Math.abs(Number(b.valor)) === MAXIMO ? " maior" : "");
+    col.innerHTML = '<div class="valor"></div><div class="barra"></div>';
+    g.appendChild(col);
+    const rot = document.createElement("div"); rot.className = "rotulo anim"; rot.textContent = b.rotulo || ""; r.appendChild(rot);
+  });
+};
+aoTempo(function (t) {
+  const altura = document.getElementById("grafico").clientHeight - 90;
+  document.querySelectorAll(".coluna").forEach(function (col, i) {
+    const b = BARRAS[i], v = Number(b.valor);
+    const p = desacelerar(progresso(t, 0.5 + i * 0.18, 1.3));
+    col.querySelector(".barra").style.height = Math.max(4, altura * Math.abs(v) / MAXIMO * p) + "px";
+    col.querySelector(".valor").textContent = (v * p).toLocaleString("pt-BR", { maximumFractionDigits: decimais(v), minimumFractionDigits: decimais(v) }) + (DADOS.unidade && DADOS.unidade.length <= 3 ? DADOS.unidade : "");
+    col.querySelector(".valor").style.opacity = p > 0.02 ? 1 : 0;
+  });
+});
+{% endblock %}

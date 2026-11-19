@@ -1,0 +1,38 @@
+# Dependências Python da esteira (Python 3.10 a 3.13 recomendado)
+# Instale com:  python instalar.py   (cria .venv e instala tudo automaticamente)
+
+# Núcleo
+PyYAML>=6.0
+requests>=2.31
+beautifulsoup4>=4.12
+Jinja2>=3.1
+num2words>=0.5.13
+numpy>=1.26
+Pillow>=10.0
+tzdata>=2024.1
+
+# Módulo 1 — pesquisa e roteiro
+ddgs>=9.0
+anthropic>=0.75
+
+# Módulo 2 — narração e auditoria
+kokoro-onnx>=0.4.9
+edge-tts>=7.0
+faster-whisper>=1.1
+
+# Módulos 3/4 — renderização HTML (cenas e thumbnails)
+playwright>=1.48
+
+# Módulo 5 — painel web
+fastapi>=0.115
+uvicorn>=0.30
+cryptography>=42  # cifra as chaves de IA de cada usuário (plataforma multiusuário)
+
+# Esteira de cortes — download de lives (YouTube/Twitch) e detecção de rosto para o enquadramento vertical
+yt-dlp[default]>=2026.10.26
+opencv-python-headless>=4.10,<5  # o 5.0 tirou o detector de rosto Haar (CascadeClassifier)
+
+# Módulo 6 — YouTube Data API v3
+google-api-python-client>=2.140
+google-auth-oauthlib>=1.2
+google-auth-httplib2>=0.2

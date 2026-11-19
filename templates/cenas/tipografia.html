@@ -1,0 +1,68 @@
+{% extends "cenas/_base.html" %}
+{# Tipografia minimalista: a narração aparece como texto cinético sincronizado com a voz #}
+{% block estilo %}
+.titulo-topo { position: absolute; left: 0; right: 0; top: 90px; text-align: center; font-size: 30px; font-weight: 700; letter-spacing: .4em; text-transform: uppercase; color: var(--texto-suave); animation-name: surgir; }
+.linha { position: absolute; left: 260px; right: 260px; top: 0; bottom: 0; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; align-content: center; gap: 0 .28em; font-family: var(--fonte-titulo); font-size: 150px; line-height: 1.08; text-transform: uppercase; text-align: center; opacity: 0; }
+.p { display: inline-block; color: var(--texto); opacity: .16; transform-origin: center bottom; }
+.p.dita { opacity: 1; }
+.p.atual { color: var(--primaria); opacity: 1; }
+.progresso { position: absolute; left: 50%; bottom: 120px; width: 420px; height: 6px; margin-left: -210px; border-radius: 3px; background: color-mix(in srgb, var(--texto) 12%, transparent); overflow: hidden; }
+.progresso i { display: block; height: 100%; width: 0; background: var(--primaria); }
+{% endblock %}
+{% block conteudo %}
+<div class="titulo-topo anim" id="topo"></div>
+<div id="linhas"></div>
+<div class="progresso"><i id="barra"></i></div>
+{% endblock %}
+{% block script %}
+const PALAVRAS = (DADOS.palavras || []).filter(function (p) { return p && p.palavra; });
+const GRUPOS = [];
+(function agrupar() {
+  let atual = [];
+  PALAVRAS.forEach(function (p) {
+    atual.push(p);
+    const texto = atual.map(function (x) { return x.palavra; }).join(" ");
+    if (atual.length >= 4 || texto.length >= 22 || /[.!?…,;:]$/.test(p.palavra)) { GRUPOS.push(atual); atual = []; }
+  });
+  if (atual.length) GRUPOS.push(atual);
+})();
+window.prepararCena = function () {
+  document.getElementById("topo").textContent = DADOS.titulo || "";
+  const caixa = document.getElementById("linhas");
+  GRUPOS.forEach(function (grupo) {
+    const linha = document.createElement("div");
+    linha.className = "linha";
+    grupo.forEach(function (p) {
+      const s = document.createElement("span");
+      s.className = "p";
+      s.textContent = String(p.palavra).replace(/[“”"]/g, "");
+      linha.appendChild(s);
+      p.el = s;
+    });
+    caixa.appendChild(linha);
+    grupo.el = linha;
+  });
+};
+window.ajustarCena = function () {
+  GRUPOS.forEach(function (g) { g.el.style.opacity = 1; ajustarTexto(g.el, 150, 70); g.el.style.opacity = 0; });
+};
+aoTempo(function (t) {
+  let indice = 0;
+  GRUPOS.forEach(function (g, i) { if (g[0].inicio <= t + 0.05) indice = i; });
+  GRUPOS.forEach(function (g, i) {
+    const ativo = i === indice;
+    const entrada = ativo ? desacelerar(progresso(t, g[0].inicio - 0.12, 0.25)) : 0;
+    g.el.style.opacity = ativo ? Math.max(entrada, t < 0.3 ? 1 : 0) : 0;
+    g.el.style.transform = "translateY(" + ((1 - entrada) * 30).toFixed(1) + "px)";
+    g.forEach(function (p, k) {
+      const proxima = g[k + 1] ? g[k + 1].inicio : p.fim + 0.3;
+      p.el.classList.toggle("dita", t >= p.inicio);
+      p.el.classList.toggle("atual", t >= p.inicio && t < proxima);
+      const pop = t >= p.inicio ? 1 + 0.12 * (1 - desacelerar(progresso(t, p.inicio, 0.22))) : 1;
+      p.el.style.transform = "scale(" + pop.toFixed(3) + ")";
+    });
+  });
+  const total = DADOS.duracao || (PALAVRAS.length ? PALAVRAS[PALAVRAS.length - 1].fim + 0.3 : 1);
+  document.getElementById("barra").style.width = (100 * limitar(t / total, 0, 1)).toFixed(2) + "%";
+});
+{% endblock %}

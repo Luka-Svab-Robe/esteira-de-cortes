@@ -1,0 +1,19 @@
+{% extends "cenas/_base.html" %}
+{# Sobreposição vertical dos Shorts: gancho no topo e @handle na base (fundo transparente) #}
+{% block fundo %}{% endblock %}
+{% block estilo %}
+.gancho { position: absolute; left: 70px; right: 70px; top: 150px; height: 240px; display: flex; align-items: center; justify-content: center; text-align: center;
+  background: var(--primaria); color: #fff; border-radius: 28px; padding: 18px 36px; font-family: var(--fonte-titulo); text-transform: uppercase; font-size: 88px; line-height: 1.02;
+  box-shadow: 0 24px 60px rgba(0,0,0,.5); transform: rotate(-1.5deg); }
+.handle { position: absolute; left: 50%; bottom: 150px; transform: translateX(-50%); max-width: 900px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  font-size: 40px; font-weight: 700; color: #fff; background: rgba(0,0,0,.6); padding: 10px 30px; border-radius: 999px; }
+.handle:empty { display: none; }
+{% endblock %}
+{% block conteudo %}<div class="gancho" id="gancho"></div><div class="handle" id="handle"></div>{% endblock %}
+{% block script %}
+window.prepararCena = function () {
+  document.getElementById("gancho").textContent = DADOS.titulo || "";
+  document.getElementById("handle").textContent = DADOS.handle || "";
+};
+window.ajustarCena = function () { ajustarTexto(document.getElementById("gancho"), 88, 44); };
+{% endblock %}

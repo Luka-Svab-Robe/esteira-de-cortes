@@ -1,0 +1,21 @@
+{% extends "thumbnails/_base.html" %}
+{# Template 1 — IMPACTO: foto inteira, sombra lateral e frase gigante com palavra em tarja #}
+{% block estilo %}
+.sombra { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(0,0,0,.92) 0%, rgba(0,0,0,.62) 40%, rgba(0,0,0,0) 72%); }
+.frase { position: absolute; left: 52px; top: 70px; width: 720px; height: 580px; display: flex; flex-direction: column; justify-content: center; font-size: 150px; color: #fff;
+  text-shadow: 0 6px 0 rgba(0,0,0,.55), 0 0 40px rgba(0,0,0,.6); }
+.frase .realce { display: inline-block; color: #fff; background: var(--primaria); padding: .02em .14em .04em; margin: .06em 0; transform: rotate(-2.5deg); box-shadow: 0 12px 32px rgba(0,0,0,.55); }
+.selo { left: 52px; bottom: 34px; border-left: 6px solid var(--primaria); }
+.borda { position: absolute; inset: 0; box-shadow: inset 0 0 0 8px color-mix(in srgb, var(--primaria) 85%, transparent); }
+{% endblock %}
+{% block conteudo %}
+<img class="foto" src="{{ dados.imagem }}" alt="">
+<div class="sombra"></div>
+<div class="frase" id="caixa"><div id="frase"></div></div>
+<div class="selo" id="selo"></div>
+<div class="borda"></div>
+{% endblock %}
+{% block script %}
+window.prepararCena = function () { realcar(document.getElementById("frase"), DADOS.frase); document.getElementById("selo").textContent = DADOS.canal || ""; };
+window.ajustarCena = function () { ajustarTexto(document.getElementById("caixa"), 150, 64); };
+{% endblock %}
