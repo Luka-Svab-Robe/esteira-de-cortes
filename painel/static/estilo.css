@@ -131,9 +131,10 @@ h2 .contador { font: 700 13px "Poppins", sans-serif; color: var(--noite); backgr
 .botao.pequeno { padding: 7px 11px; font-size: 13px; border-radius: 10px; }
 .giro { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--rosa); border-right-color: var(--sol); border-bottom-color: transparent; animation: girar .8s linear infinite; display: inline-block; flex: none; }
 @keyframes girar { to { transform: rotate(360deg); } }
-input[type="text"], input[type="url"], input[type="number"], textarea, select {
+input[type="text"], input[type="url"], input[type="number"], input[type="time"], textarea, select {
   background: rgba(8, 2, 18, .7); border: 1px solid var(--borda); border-radius: 10px; padding: 9px 11px; outline: none; width: 100%;
 }
+input[type="time"] { color-scheme: dark; }
 input:focus, textarea:focus, select:focus { border-color: var(--rosa); box-shadow: 0 0 0 3px rgba(255, 45, 149, .2); }
 textarea { resize: vertical; }
 label.campo { display: grid; gap: 5px; font-size: 13px; color: var(--suave); }
@@ -525,6 +526,31 @@ input[type="email"], input[type="password"] {
 .fonte .autorizacao { margin: 0; color: var(--apagado); overflow-wrap: anywhere; }
 .fonte .acoes { margin-top: 0; }
 .fonte .lives-grade { margin-top: 6px; }
+.live-card .capa-vazia { position: absolute; inset: 0; display: grid; place-items: center; font-weight: 800; letter-spacing: .14em;
+  color: rgba(255, 233, 246, .8); background: linear-gradient(135deg, rgba(255, 45, 149, .28), rgba(25, 227, 214, .14)); }
+
+/* aba Agendados: canais de publicação (cadastro, YouTube, horários e dias) */
+.secao-publicacao { margin: 22px 0; display: grid; gap: 12px; }
+.secao-publicacao > .pequeno { margin: 0; }
+.canal-publi { display: grid; gap: 12px; padding: 16px 0; border-top: 1px solid var(--borda); }
+.canal-publi:first-child { border-top: 0; padding-top: 4px; }
+.canal-publi-topo { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.canal-publi-nome { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.canal-publi-nome .avatar, .canal-publi-nome .avatar-letra { width: 44px; height: 44px; border-radius: 50%; flex: none; object-fit: cover; }
+.canal-publi-nome .avatar-letra { display: grid; place-items: center; background: var(--por-do-sol); color: #1a0410; font-weight: 800; }
+.campo-agenda { display: grid; gap: 8px; }
+.rotulo-agenda { font-size: 13px; color: var(--suave); }
+.horarios { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.horario { display: inline-flex; align-items: center; gap: 6px; padding: 5px 6px 5px 12px; border-radius: 999px;
+           border: 1px solid rgba(25, 227, 214, .5); background: rgba(25, 227, 214, .08); font-weight: 700; }
+.horario button { border: 0; background: rgba(255, 255, 255, .08); color: var(--texto); width: 24px; height: 24px; border-radius: 50%; cursor: pointer; }
+.horario button:hover { background: rgba(255, 77, 109, .35); }
+.linha-hora { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.linha-hora input[type="time"] { width: auto; }
+.dias { display: flex; gap: 6px; flex-wrap: wrap; }
+.dia { min-width: 52px; padding: 7px 10px; border-radius: 10px; border: 1px solid var(--borda); background: transparent; color: var(--suave); cursor: pointer; font-weight: 600; }
+.dia.ativo { background: var(--por-do-sol); color: #1a0410; border-color: transparent; }
+.form-cadastro { display: grid; gap: 10px; margin-top: 10px; }
 @media (max-width: 520px) {
   .aba { padding: 7px 8px; font-size: 13px; }
   .fonte-topo { flex-direction: column; }

@@ -23,7 +23,7 @@ function renderSelo() {
   if (c && c.avatar && foto.getAttribute("src") !== c.avatar) foto.src = c.avatar;
   foto.classList.toggle("oculto", !(c && c.avatar));
   const texto = $("#canal-chip-texto");
-  if (!c) { chip.classList.add("alerta"); texto.textContent = "Crie um canal na Conta"; return; }
+  if (!c) { chip.classList.add("alerta"); texto.textContent = "Cadastre seu canal"; return; }
   const yt = c.youtube || {};
   if (yt.em_andamento) { chip.classList.add("alerta"); texto.textContent = "Conectando o YouTube…"; }
   else if (yt.conectado) { chip.classList.add("ok"); texto.textContent = yt.handle || yt.nome || c.nome; }
@@ -130,6 +130,7 @@ export async function alternarAuto(caminho, corpo, chave) {
 /* ------------------------------------------------------------ YouTube */
 let conectando = false;
 export function abrirYoutube() {
+  if (!canal()) { location.hash = "#/agendados"; return; }  // sem canal: leva para o cadastro
   renderYoutube();
   $("#dialogo-youtube").showModal();
 }
@@ -137,7 +138,7 @@ export function abrirYoutube() {
 export function renderYoutube() {
   const c = canal();
   const corpo = $("#youtube-corpo");
-  if (!c) { corpo.replaceChildren(el("p", { text: "Crie um canal na aba Conta primeiro." })); return; }
+  if (!c) { corpo.replaceChildren(el("p", { text: "Cadastre um canal primeiro, em Agendados → Seus canais de publicação." })); return; }
   const yt = c.youtube || {};
   if (conectando && !yt.em_andamento && yt.conectado && !yt.erro) {
     conectando = false;
@@ -167,8 +168,8 @@ export function renderYoutube() {
   corpo.replaceChildren(...[
     yt.erro ? el("p", { class: "aviso erro", text: yt.erro }) : null,
     yt.conectado
-      ? el("p", {}, "Vinculado a ", el("strong", { text: yt.nome || "seu canal" }), yt.handle ? ` (${yt.handle})` : "", ". As lives dele aparecem no painel.")
-      : el("p", { text: "Conecte o canal do YouTube: as lives dele aparecem aqui para cortar e os Shorts são publicados nele." }),
+      ? el("p", {}, "Vinculado a ", el("strong", { text: yt.nome || "seu canal" }), yt.handle ? ` (${yt.handle})` : "", ". Os Shorts deste canal são publicados e agendados nele.")
+      : el("p", { text: "Conecte o canal do YouTube onde os Shorts deste canal vão ser publicados e agendados." }),
     yt.conectado ? el("p", { class: "pequeno", text: "Enquanto o app do Google estiver em modo Teste, a conexão vence a cada 7 dias. Se algo falhar, reconecte aqui." }) : null,
     botao].filter(Boolean));
 }

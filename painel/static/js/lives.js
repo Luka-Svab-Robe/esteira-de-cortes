@@ -1,6 +1,6 @@
 /* Cortar por link (Twitch, Kick ou YouTube), o cartão de cada live (usado na aba Canais) e a janela
    "Como você quer cortar?" (tudo automático ou passo a passo, com layout e opções). */
-import { $, MODELOS, ROTULOS, avisar, el, horaCompleta, postar, relogio } from "./base.js";
+import { $, MODELOS, ROTULOS, avisar, confirmar, el, horaCompleta, postar, relogio } from "./base.js";
 import { canal, estado, ESTADOS_TRABALHANDO } from "./estado.js";
 
 let aoComecar = () => {};
@@ -19,6 +19,7 @@ export function cardLive(live, projeto, rodando) {
   }
   return el("article", { class: "card live-card" },
     el("div", { class: "capa", style: live.miniatura ? `background-image:url("${live.miniatura.replace(/"/g, "")}")` : "" },
+      live.miniatura ? null : el("span", { class: "capa-vazia", text: live.no_ar ? "🔴 AO VIVO" : (PLATAFORMAS[live.plataforma] || "LIVE") }),
       live.duracao ? el("span", { class: "duracao", text: relogio(live.duracao) }) : null),
     el("div", { class: "corpo" },
       el("h3", { text: live.titulo || "Live" }),
@@ -73,6 +74,12 @@ async function conferirLink(c, url, autorizacao = "") {
       return texto ? conferirLink(c, url, texto) : null;
     }
     if (d.codigo === "repetida" && d.projeto) irParaProjeto(d.projeto);
+    if (d.codigo === "link_de_canal" && await confirmar("Esse é o link de um canal, não de uma live.",
+      { ok: "Integrar este canal", detalhe: "Na aba Canais você integra o canal e vê as lives dele para escolher qual cortar." })) {
+      const { integrarCanalPeloLink } = await import("./fontes.js");
+      integrarCanalPeloLink(url);
+      return null;
+    }
     avisar(e.message, "erro");
     return null;
   }

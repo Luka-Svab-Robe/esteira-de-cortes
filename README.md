@@ -242,9 +242,11 @@ O projeto vem **zerado**: sem contas, sem canais, sem nada seu. Na primeira vez:
 
    Dá para mudar depois em **Conta → Senha e acesso**. Mesmo sem senha, o painel só abre no próprio computador:
    pela rede ele continua fechado. E-mail e senha ficam guardados só no seu PC.
-3. **Crie o seu canal** — **Conta → Seus canais → Criar canal** (para cortes, escolha o tipo *cortes*).
-4. **Conecte o YouTube** — siga o guia [credenciais/LEIA-ME.md](credenciais/LEIA-ME.md) uma vez e clique no
-   selo do canal no topo do painel.
+3. **Cadastre o seu canal** — aba **Agendados → Seus canais de publicação → ＋ Cadastrar um canal** (nome do canal
+   do YouTube onde os Shorts vão ser postados). Dá para cadastrar quantos quiser.
+4. **Conecte o YouTube e escolha a agenda** — no mesmo cartão do canal: **Conectar YouTube** (siga uma vez o guia
+   [credenciais/LEIA-ME.md](credenciais/LEIA-ME.md)), depois os **horários** e os **dias da semana** em que ele
+   publica, e **Salvar agenda**.
 5. **Integre os canais das lives** — aba **Canais**: cole o link do canal (Twitch, Kick ou YouTube), diga se é
    seu ou se o criador autorizou, e marque **Vigiar** se quiser o Modo automático. Guia completo em
    [docs/LEIA-ME-CANAIS.md](docs/LEIA-ME-CANAIS.md).

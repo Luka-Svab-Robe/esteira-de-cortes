@@ -84,7 +84,7 @@ export async function renderAgendados(forcar = false) {
       el("div", { class: "numero" }, el("strong", { text: String(d.fila.length) }), "na fila de envio"),
       el("div", { class: "numero" }, el("strong", { text: String(d.publicados.length) }), "já publicados"),
       el("div", { class: "numero" }, el("strong", { text: String(d.retirados.length) }), "fora da agenda")),
-    horario ? el("p", { class: "pequeno", text: `Horário de publicação: ${horario} (um Short por dia).` }) : null,
+    horario ? el("p", { class: "pequeno", text: `Horários de publicação deste canal: ${horario}. Para mudar, use "Seus canais de publicação", acima.` }) : null,
     secao("Agendados no YouTube", d.agendados, "Nada agendado ainda.",
       (s) => linha(s, { data: quando(s.quando), pill: el("span", { class: "pill agendado", text: "Agendado" }),
         acoes: [botaoYoutube(s), botaoRetirar(s)] })),

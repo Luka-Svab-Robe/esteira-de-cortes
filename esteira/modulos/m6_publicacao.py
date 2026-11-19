@@ -109,8 +109,9 @@ def _credenciais(canal: Canal):
 
     token = canal.caminho_token_youtube
     if not token.exists():
-        raise ErroPublicacao(f"O canal '{canal.id}' ainda não foi conectado ao YouTube. "
-                             f"Rode: python esteira.py youtube autenticar --canal {canal.id}")
+        raise ErroPublicacao(f"O canal '{canal.id}' ainda não foi conectado ao YouTube. Conecte no painel "
+                             f"(Agendados → Seus canais de publicação → Conectar YouTube) ou rode: "
+                             f"python esteira.py youtube autenticar --canal {canal.id}")
     credenciais = Credentials.from_authorized_user_file(str(token), ESCOPOS)
     if not credenciais.valid:
         if credenciais.expired and credenciais.refresh_token:

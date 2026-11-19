@@ -363,6 +363,35 @@ def legenda_editada_a_mao_e_refeita():
         _espera_http(r.salvar_legenda, 409, "canal_teste", pasta.name, 1, {"automatica": True})
 
 
+@teste
+def cadastrar_canal_e_agenda_de_publicacao():
+    from esteira.canal import Canal
+    from painel import contas, rotas_agenda, rotas_conta, sessao
+
+    with _ServidorIsolado():
+        dono = sessao.usuario_atual()
+        criado = rotas_conta.criar_canal({"nome": "Meu Canal Novo", "nicho": "humor"})
+        novo = Canal.carregar(criado["canal"])
+        assert novo.editorial["tipo_canal"] == "cortes" and contas.dono_do_canal(novo.id) == dono["id"]
+        _espera_http(rotas_conta.criar_canal, 400, {"nome": "ab"})
+
+        caminho = Canal.carregar("canal_teste").pasta / "identidade.yaml"
+        original = caminho.read_text(encoding="utf-8")
+        try:
+            r = rotas_agenda.salvar_agenda_do_canal("canal_teste", {"horarios": ["21:00", "09:30", "21:00"], "dias": ["sab", "seg", "xx"]})
+            assert r["horarios"] == ["09:30", "21:00"] and r["dias"] == ["seg", "sab"], r
+            pub = Canal.carregar("canal_teste").publicacao
+            assert pub["horarios_shorts"] == ["09:30", "21:00"] and pub["dias_semana"] == ["seg", "sab"]
+            texto = caminho.read_text(encoding="utf-8")
+            assert texto.count("fuso_horario: America/Sao_Paulo") == 1 and "cortes:" in texto  # o resto ficou igual
+            for corpo in ({"horarios": ["25:00"], "dias": ["seg"]}, {"horarios": [], "dias": ["seg"]},
+                          {"horarios": ["10:00"], "dias": []}, {"horarios": [f"{h:02d}:00" for h in range(13)], "dias": ["seg"]}):
+                _espera_http(rotas_agenda.salvar_agenda_do_canal, 400, "canal_teste", corpo)
+            _espera_http(rotas_agenda.salvar_agenda_do_canal, 404, "canal_de_outro", {"horarios": ["10:00"], "dias": ["seg"]})
+        finally:
+            caminho.write_text(original, encoding="utf-8")
+
+
 def _pedido(host: str, cliente: str) -> SimpleNamespace:
     return SimpleNamespace(headers={"host": host}, client=SimpleNamespace(host=cliente), cookies={})
 

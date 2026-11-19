@@ -1,6 +1,7 @@
 """Pipeline por etapas: opções da live, momentos editáveis à mão, executar uma etapa, copiloto e checagem."""
 from __future__ import annotations
 
+import json
 import re
 import threading
 
@@ -326,12 +327,15 @@ def revisao_automatica(canal: str, pasta: str):
 
 # ------------------------------------------------------------------ modelos visuais (templates)
 _TRAVA_PREVIA = threading.Lock()
-_SECAO_CORTES = re.compile(r"(?ms)^cortes:[^\n]*\n(.*?)(?=^[a-z_]+:|\Z)")
+def _secao_yaml(nome: str) -> re.Pattern:
+    return re.compile(rf"(?ms)^{re.escape(nome)}:[^\n]*\n(.*?)(?=^[a-z_]+:|\Z)")
 
 
 def _formatar_yaml(valor) -> str:
     if isinstance(valor, bool):
         return "true" if valor else "false"
+    if isinstance(valor, (list, tuple)):  # lista em linha, com aspas (JSON também é YAML válido)
+        return "[" + ", ".join(json.dumps(v, ensure_ascii=False) for v in valor) + "]"
     if isinstance(valor, float) and valor.is_integer():
         return str(int(valor))
     return str(valor)
@@ -339,9 +343,14 @@ def _formatar_yaml(valor) -> str:
 
 def gravar_padroes_cortes(texto: str, valores: dict) -> str:
     """Troca valores dentro da seção `cortes:` do identidade.yaml, preservando comentários e o resto do arquivo."""
-    secao = _SECAO_CORTES.search(texto)
+    return gravar_na_secao(texto, "cortes", valores)
+
+
+def gravar_na_secao(texto: str, nome_secao: str, valores: dict) -> str:
+    """Troca valores dentro de uma seção (ex.: `publicacao:`) do identidade.yaml, preservando comentários e o resto."""
+    secao = _secao_yaml(nome_secao).search(texto)
     if not secao:
-        raise ValueError("O identidade.yaml do canal não tem a seção de cortes.")
+        raise ValueError(f"O identidade.yaml do canal não tem a seção {nome_secao}.")
     corpo = secao.group(1)
     for chave, valor in valores.items():
         linha = re.compile(rf"(?m)^(  {re.escape(chave)}:[ \t]*)([^\s#][^#\n]*?)?([ \t]*(#.*)?)$")

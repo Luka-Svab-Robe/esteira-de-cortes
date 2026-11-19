@@ -15,6 +15,7 @@
 <link rel="modulepreload" href="/static/js/projetos.js">
 <link rel="modulepreload" href="/static/js/lives.js">
 <link rel="modulepreload" href="/static/js/fontes.js">
+<link rel="modulepreload" href="/static/js/publicacao.js">
 <script type="module" src="/static/js/app.js"></script>
 </head>
 <body>
@@ -154,8 +155,14 @@
         <div class="ceu"></div><div class="sol"></div><div class="chao"></div>
         <div class="conteudo">
           <h1 class="titulo-gta">Agendados</h1>
-          <p>Tudo o que já foi para o YouTube e o que está na fila de envio. Um Short por dia, no mesmo horário.</p>
+          <p>Cadastre os seus canais do YouTube, escolha quando cada um publica e acompanhe o que já foi para o ar.</p>
         </div>
+      </section>
+      <section class="card secao-publicacao" aria-labelledby="titulo-canais-publi">
+        <h2 class="titulo-gta" id="titulo-canais-publi">Seus canais de publicação</h2>
+        <p class="pequeno">Os canais do YouTube onde os Shorts são postados. Conecte cada um e escolha os horários e os dias em que ele publica.</p>
+        <div id="lista-canais-publicacao"><div class="esqueleto" style="height:120px"></div></div>
+        <details class="novo-canal" id="caixa-cadastro"><summary>＋ Cadastrar um canal</summary><div id="cadastrar-canal"></div></details>
       </section>
       <div id="agendados"><div class="esqueleto" style="height:180px"></div></div>
     </div>

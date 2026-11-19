@@ -444,6 +444,18 @@ def canal_conectado_nao_vira_fonte_e_vigia_por_fonte():
 
 
 @teste
+def tags_automaticas_sem_palavras_de_conversa():
+    from esteira.cortes import analise
+
+    tags = analise._tags_automaticas("Cara, olha isso mano! O Brian bateu o carro no poste. What a crash, man, just wow", "Criador A")
+    assert tags[:2] == ["criador a", "cortes de live"], tags
+    assert {"brian", "carro", "poste", "crash"} <= set(tags), tags
+    assert not {"cara", "olha", "mano", "what", "man", "just", "wow"} & set(tags), tags
+    corte = analise.heuristica([{"id": 1, "inicio": 0.0, "fim": 20.0, "texto": "Mano, o carro voou!"}], 1, "criador_a")[0]
+    assert corte["tags"][0] == "criador a" and "carro" in corte["tags"] and "mano" not in corte["tags"]
+
+
+@teste
 def link_de_canal_vira_pagina_do_canal_sem_internet():
     from esteira.cortes import orquestrador
 

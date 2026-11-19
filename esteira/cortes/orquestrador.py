@@ -534,7 +534,7 @@ def escolher_momentos(projeto: Projeto, canal: Canal, cands: list[dict], modo_ag
         log.aviso(f"AGUARDANDO_SELECAO_DO_AGENTE: leia {caminho} e importe o JSON com 'cortes importar'.")
         return None
     if escolhidos is None:
-        escolhidos = analise.heuristica(cands, maximo)
+        escolhidos = analise.heuristica(cands, maximo, fonte_nome)
         projeto.alertar("analise", "Cortes escolhidos sem modelo de linguagem (pela pontuação): revise títulos e ganchos.")
     cortes = analise.validar(escolhidos, cands, dmin, dmax, maximo)
     projeto.salvar("analise/cortes.json", cortes)

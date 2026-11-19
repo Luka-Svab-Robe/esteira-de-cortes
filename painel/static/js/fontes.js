@@ -22,6 +22,15 @@ export function esquecerLives() {
   estado.lives = new Map();
 }
 
+/* "Cortar este link" recebeu o link de um canal: abre a aba Canais com o link já no campo de integrar */
+export function integrarCanalPeloLink(url) {
+  location.hash = "#/canais";
+  const campo = $("#integrar-fonte input[type=url]");
+  if (!campo) return;
+  campo.value = url;
+  setTimeout(() => campo.focus(), 50);
+}
+
 const enderecoCurto = (url) => String(url || "").replace(/^https?:\/\/(www\.|m\.)?/i, "").replace(/\/$/, "");
 const vazio = (titulo, texto) => el("div", { class: "vazio" }, el("strong", { text: titulo }), texto);
 

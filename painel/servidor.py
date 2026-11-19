@@ -425,7 +425,7 @@ def dados_do_painel() -> dict:
             "layout": c.cfg.get("cortes", {}).get("layout", "moldura"),
             "cortes_padrao": {k: c.cfg.get("cortes", {}).get(k) for k in ("max_cortes_por_live", "duracao_min",
                                                                          "duracao_max", "traduzir")},
-            "horarios": c.publicacao.get("horarios_shorts", []),
+            "horarios": c.publicacao.get("horarios_shorts", []), "dias": c.publicacao.get("dias_semana", []),
             "avatar": f"/canal/{c.id}/avatar?v={int((c.pasta / 'assets' / 'avatar.jpg').stat().st_mtime)}"
                       if (c.pasta / "assets" / "avatar.jpg").exists() else "",
             "trilhas": _trilhas_info(c),

@@ -1,17 +1,47 @@
 """Aba "Agendados": gestão dos Shorts que já foram para o YouTube (agendados, publicados ou retirados) e dos que
-estão prontos esperando o envio, com o dia previsto; tirar um Short da agenda."""
+estão prontos esperando o envio, com o dia previsto; tirar um Short da agenda; horários e dias de cada canal."""
 from __future__ import annotations
 
 import datetime as dt
+import re
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Body, HTTPException
 
+from esteira.canal import Canal
 from esteira.projeto import Projeto
 
 router = APIRouter()
 
 ESPERANDO_ENVIO = ("aprovado", "publicando", "erro_publicacao")
 MOTIVO_DONO = "você tirou da agenda"
+DIAS_SEMANA = ("seg", "ter", "qua", "qui", "sex", "sab", "dom")
+MAX_HORARIOS = 12
+_HORA = re.compile(r"^([01]\d|2[0-3]):[0-5]\d$")
+
+
+@router.put("/api/canais/{canal}/agenda")
+def salvar_agenda_do_canal(canal: str, corpo: dict = Body(...)):
+    """Quando os Shorts aprovados do canal vão ao ar: horários e dias da semana (seção publicacao do identidade.yaml).
+    Vale para os próximos envios; os já agendados no YouTube continuam como estão."""
+    from painel.rotas_etapas import gravar_na_secao
+
+    horarios = sorted({str(h).strip() for h in (corpo.get("horarios") or [])})
+    escolhidos = {str(d).strip().lower() for d in (corpo.get("dias") or [])}
+    dias = [d for d in DIAS_SEMANA if d in escolhidos]
+    if not horarios or len(horarios) > MAX_HORARIOS or not all(_HORA.match(h) for h in horarios):
+        raise HTTPException(400, {"mensagem": f"Coloque de 1 a {MAX_HORARIOS} horários no formato 20:00."})
+    if not dias:
+        raise HTTPException(400, {"mensagem": "Escolha pelo menos um dia da semana."})
+    c = _srv()._canal_cortes(canal)
+    caminho = c.pasta / "identidade.yaml"
+    try:
+        texto = gravar_na_secao(caminho.read_text(encoding="utf-8"), "publicacao",
+                                {"horarios_shorts": horarios, "dias_semana": dias})
+    except ValueError as exc:
+        raise HTTPException(500, {"mensagem": str(exc)})
+    caminho.write_text(texto, encoding="utf-8")
+    Canal.carregar(canal)  # confere que o arquivo continua válido
+    return {"ok": True, "horarios": horarios, "dias": dias}
 
 
 def _srv():

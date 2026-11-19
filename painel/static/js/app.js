@@ -7,6 +7,7 @@ import { mostrarEntrada, sair } from "./entrada.js";
 import { canal, estado, guardarPreferencia, ocupado } from "./estado.js";
 import { esquecerLives, ligarFontes, renderFontes } from "./fontes.js";
 import { ligarLink, quandoComecar } from "./lives.js";
+import { ligarPublicacao, renderCanaisPublicacao } from "./publicacao.js";
 import { destacarDoEndereco, quandoPrecisarRecarregar, renderProjetos } from "./projetos.js";
 import { renderServicos } from "./servicos.js";
 import { renderAgendados } from "./agendados.js";
@@ -48,6 +49,7 @@ function montarCasca() {
   quandoPrecisarRecarregar(() => carregar(true));
   ligarCanal({ aoMudar: () => carregar(true), aoConectarYoutube: () => carregar(true) });
   ligarFontes({ aoMudar: () => carregar(true) });
+  ligarPublicacao({ aoMudar: () => carregar(true) });
   ligarConta({ aoMudar: () => carregar(true).then(() => estado.aba === "conta" && renderConta()),
     aoMudarSessao: (u) => { estado.sessao.usuario = { ...estado.sessao.usuario, ...u }; renderUsuario(); } });
   $("#arquivo-musica").addEventListener("change", enviarMusica);
@@ -90,7 +92,7 @@ function aplicarEndereco() {
   for (const tela of document.querySelectorAll(".tela-aba")) tela.classList.toggle("oculto", tela.id !== `tela-${aba}`);
   if (aba === "servicos") renderServicos();
   if (aba === "canais") renderFontes(true);
-  if (aba === "agendados") renderAgendados(true);
+  if (aba === "agendados") { renderCanaisPublicacao(true); renderAgendados(true); }
   if (aba === "conta") renderConta();
   if (aba === "painel") destacarDoEndereco();
 }
@@ -122,7 +124,7 @@ function desenhar() {
   renderProjetos();
   renderFontes();
   if (estado.aba === "servicos") renderServicos();
-  if (estado.aba === "agendados") renderAgendados();
+  if (estado.aba === "agendados") { renderCanaisPublicacao(); renderAgendados(); }
 }
 
 /* ------------------------------------------------------------ app instalável */

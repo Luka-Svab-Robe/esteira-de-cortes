@@ -225,7 +225,8 @@ function formNovoCanal() {
       recarregar(true);
     } catch (e) { avisar(e.message, "erro"); }
   }));
-  return el("details", { class: "novo-canal" }, el("summary", { text: "Criar outro canal de cortes" }),
+  const temCanal = Boolean(estado.dados && estado.dados.canais.length);
+  return el("details", { class: "novo-canal", open: !temCanal }, el("summary", { text: temCanal ? "Criar outro canal de cortes" : "Criar um canal de cortes" }),
     el("div", { class: "grade-campos" }, el("label", { class: "campo" }, "Nome do canal", nome),
       el("label", { class: "campo" }, "Nicho", nicho), el("label", { class: "campo" }, "Cores", paleta)),
     el("div", { class: "acoes" }, criar));

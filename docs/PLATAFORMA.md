@@ -22,7 +22,8 @@ vitrine de serviços, 3 templates e conexões por usuário. Mantém a esteira (`
   `/api/canais/novo` (criar canal de cortes), etapas: `/api/projetos/{c}/{p}/etapas/{etapa}` (executar uma etapa),
   `/api/projetos/{c}/{p}/momentos` (GET/PUT edição manual dos cortes), `/api/copiloto` (sugestões de texto),
   `/api/projetos/{c}/{p}/revisao` (checagem automática), `/api/modelos/{c}/{modelo}.png` (prévias dos templates),
-  `/api/canais/{c}/padroes` (modelo, quantidade/duração dos Shorts e tradução padrão do canal).
+  `/api/canais/{c}/padroes` (modelo, quantidade/duração dos Shorts e tradução padrão do canal),
+  `/api/canais/{c}/agenda` (PUT: horários `HH:MM` e dias da semana em `publicacao`, aba Agendados → Seus canais de publicação).
 - Isolamento: `_canal_cortes()`/`_projeto()` checam o dono; envios guardam `usuario_id`; `/api/painel` só do usuário.
 - Etapas da esteira: `cortes processar --ate ingestao`, `cortes continuar --a-partir-de analise|edicao --ate analise|edicao`;
   estado `aguardando_etapa` entre etapas.

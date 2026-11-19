@@ -1,7 +1,8 @@
 /* "Suas lives": cada live cortada vira um cartão com o pipeline visual (Baixar → Momentos → Editar → Legenda →
    Textos → Revisão → Publicar), a barra de progresso real e o painel da etapa escolhida. Nada de log bruto na tela. */
 import { $, ROTULOS, api, avisar, comCarregando, confirmar, el, postar, projetoUrl } from "./base.js";
-import { ESTADOS_TRABALHANDO, canal, estado } from "./estado.js";
+import { abrirYoutube } from "./canal.js";
+import { ESTADOS_TRABALHANDO, canal, estado, guardarPreferencia } from "./estado.js";
 import { seletorModelo } from "./lives.js";
 import { painelLegenda } from "./legenda.js";
 import { painelMomentos } from "./momentos.js";
@@ -229,7 +230,9 @@ async function painelRevisao(p) {
 function painelPublicar(p, aoMudar) {
   const caixa = el("div", { class: "etapa-texto" });
   const marcados = edicoes(p).filter((s) => s.selecionado).length;
-  const c = canal() || {};
+  // o canal dono desta live (não o escolhido no topo): os horários e o YouTube são dele
+  const c = (estado.dados ? estado.dados.canais : []).find((x) => x.id === p.canal) || canal() || {};
+  const semYoutube = !(c.youtube && c.youtube.conectado);
   if (p.estado === "agendado") {
     caixa.append(el("p", { text: "✓ Os Shorts estão na agenda do YouTube." }),
       el("ul", { class: "lista agenda" }, p.shorts.filter((s) => s.youtube && s.youtube.publicar_em).map((s) =>
@@ -250,7 +253,13 @@ function painelPublicar(p, aoMudar) {
   }
   caixa.append(el("p", { text: `${marcados} de ${p.shorts.length} Short(s) marcados para publicar.` }),
     el("p", { class: "pequeno", text: `Horários do canal: ${(c.horarios || []).join(", ") || "padrão"}. Nada vai ao ar sem você tocar no botão abaixo.` }));
-  const aprovar = el("button", { class: "botao cta", type: "button", text: p.estado === "erro_publicacao" ? "Tentar agendar de novo" : "Aprovar e agendar" });
+  if (semYoutube) {
+    caixa.append(el("p", { class: "aviso", text: `O canal ${c.nome || ""} ainda não está conectado ao YouTube: conecte para poder agendar estes Shorts.` }),
+      el("div", { class: "acoes" }, el("button", { class: "botao cta", type: "button", text: "Conectar YouTube",
+        onclick: () => { estado.canalId = c.id; guardarPreferencia("canal", c.id); abrirYoutube(); } })));
+  }
+  const aprovar = el("button", { class: "botao cta", type: "button", disabled: semYoutube,
+    text: p.estado === "erro_publicacao" ? "Tentar agendar de novo" : "Aprovar e agendar" });
   aprovar.addEventListener("click", async () => {
     if (!marcados) return avisar("Marque pelo menos um Short em “Textos”.", "erro");
     if (!(await confirmar(`Agendar ${marcados} Short(s) no YouTube?`, { ok: "Agendar" }))) return;

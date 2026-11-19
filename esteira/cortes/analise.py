@@ -317,7 +317,27 @@ def validar(cortes: list[dict], candidatos_: list[dict], dmin: float, dmax: floa
     return finais
 
 
-def heuristica(candidatos_: list[dict], maximo: int) -> list[dict]:
+# Palavras de conversa (português falado e inglês comum, sem acentos) que não descrevem o momento: ficam fora das
+# tags automáticas (sem modelo de linguagem as tags saem da transcrição).
+FALA_COMUM = frozenset("""
+cara mano mana gente pessoal galera olha olhe vamos vamo bora temos tenho tava to ta ai ah eh oh ne tipo sim nao
+entao agora aqui ali isso vai vou foi fala falar faco precisa pode posso quer quero acho sei saber ver vem viu bom
+boa beleza nossa deus caraca kkk kkkk haha hahaha ue opa oi ok okay legal velho mesmo cade ganho
+this that what just man you your are not for get got like yeah yes no uh um hey go going gonna we they he she him
+her it its me my be do does did all can will one there here now good god really know right with have has had were
+been dude bro guys lol wow
+""".split())
+TAGS_AUTOMATICAS = 8
+
+
+def _tags_automaticas(texto: str, fonte_nome: str = "") -> list[str]:
+    """Tags sem modelo de linguagem: o criador da live, "cortes de live" e as palavras que descrevem o momento."""
+    palavras = [p for p in util.palavras_chave(texto, 20) if p not in FALA_COMUM]
+    base = [util.normalizar(fonte_nome)] if (fonte_nome or "").strip() else []
+    return list(dict.fromkeys(base + ["cortes de live"] + palavras))[:TAGS_AUTOMATICAS]
+
+
+def heuristica(candidatos_: list[dict], maximo: int, fonte_nome: str = "") -> list[dict]:
     cortes = []
     for c in candidatos_[:maximo]:
         frases = util.dividir_frases(c["texto"]) or [c["texto"]]
@@ -325,5 +345,6 @@ def heuristica(candidatos_: list[dict], maximo: int) -> list[dict]:
         cortes.append({"candidato": c["id"], "inicio": c["inicio"], "fim": c["fim"],
                        "gancho": " ".join(primeira.split()[:6]).rstrip(",.;:"),
                        "titulo": util.limitar(primeira, 80, ""), "descricao": util.limitar(c["texto"], 220),
-                       "tags": util.palavras_chave(c["texto"], 8), "motivo": "maior reação do público (heurística)", "automatico": True})
+                       "tags": _tags_automaticas(c["texto"], fonte_nome),
+                       "motivo": "maior reação do público (heurística)", "automatico": True})
     return cortes
