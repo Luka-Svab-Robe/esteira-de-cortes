@@ -45,7 +45,7 @@ Tudo roda **no seu computador**, num painel bonito no navegador (tema neon "Vice
 | 📅 | **Agenda no YouTube** | Publica nos horários do canal, um por vez, sem repetir o mesmo momento. |
 | 🤖 | **Modo automático** | Vigia os canais que você marcar e corta sozinho quando sai live nova. |
 | 🎬 | **Também faz vídeos do zero** | Canais "dark": pesquisa, roteiro, narração neural, montagem, Shorts e capas. |
-| 👥 | **Multiusuário e app de PC** | Login, contas separadas, chaves de IA cifradas; abre numa janela própria como um app. |
+| 👥 | **Com ou sem senha, você escolhe** | Use direto no seu PC, sem login, ou proteja com e-mail e senha e tenha uma equipe com contas separadas. Abre numa janela própria, como um app. |
 
 ---
 
@@ -236,7 +236,12 @@ Para gerar um instalador `.exe` para Windows (instala Python, FFmpeg e Deno port
 O projeto vem **zerado**: sem contas, sem canais, sem nada seu. Na primeira vez:
 
 1. **Abra o app** — `python esteira.py app` (ou peça à IA). O painel abre em http://127.0.0.1:8765.
-2. **Primeiro acesso** — crie a sua conta de administrador (e-mail e senha ficam só no seu PC).
+2. **Primeiro acesso: com ou sem senha?** — escolha como quer entrar:
+   - 🔓 **Usar sem senha** — abre direto neste computador. Ideal se só você usa o PC.
+   - 🔒 **Proteger com e-mail e senha** — pede login. Ideal se outras pessoas usam o PC ou se você quer uma equipe.
+
+   Dá para mudar depois em **Conta → Senha e acesso**. Mesmo sem senha, o painel só abre no próprio computador:
+   pela rede ele continua fechado. E-mail e senha ficam guardados só no seu PC.
 3. **Crie o seu canal** — **Conta → Seus canais → Criar canal** (para cortes, escolha o tipo *cortes*).
 4. **Conecte o YouTube** — siga o guia [credenciais/LEIA-ME.md](credenciais/LEIA-ME.md) uma vez e clique no
    selo do canal no topo do painel.

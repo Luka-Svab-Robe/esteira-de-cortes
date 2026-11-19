@@ -22,6 +22,6 @@
   <text class="l" style="animation-delay:5s" x="28" y="224" fill="#3ddc84">✔ <tspan fill="#ffe9f6">Dependências, FFmpeg, fontes e Chromium prontos</tspan></text>
   <text class="l" style="animation-delay:6.2s" x="28" y="256" fill="#3ddc84">✔ <tspan fill="#ffe9f6">Voz neural e legendas (modelos locais) baixadas</tspan></text>
   <text class="l" style="animation-delay:7.4s" x="28" y="288" fill="#3ddc84">✔ <tspan fill="#ffe9f6">Diagnóstico sem pendências</tspan></text>
-  <text class="l" style="animation-delay:8.6s" x="28" y="320" fill="#ffd23f">★ <tspan fill="#ffe9f6">App aberto em </tspan><tspan fill="#19e3d6" text-decoration="underline">http://127.0.0.1:8765</tspan><tspan fill="#ffe9f6"> — crie sua conta!</tspan></text>
+  <text class="l" style="animation-delay:8.6s" x="28" y="320" fill="#ffd23f">★ <tspan fill="#ffe9f6">App aberto em </tspan><tspan fill="#19e3d6" text-decoration="underline">http://127.0.0.1:8765</tspan><tspan fill="#ffe9f6"> — é só começar!</tspan></text>
   <rect class="cursor" x="28" y="334" width="10" height="4" fill="#ffd23f"/>
 </svg>

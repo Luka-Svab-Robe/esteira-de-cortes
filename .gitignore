@@ -29,3 +29,5 @@ canais/*/fila_processados.txt
 canais/*/shorts_publicados.json
 site/
 .vscode/
+# permissões locais que o Claude Code guarda para cada pessoa
+.claude/settings.local.json

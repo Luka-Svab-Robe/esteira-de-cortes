@@ -19,7 +19,7 @@ Use a **mesma conta Google que administra o(s) canal(is) do YouTube**.
 7. Conecte cada canal (abre o navegador para você escolher a conta/canal). Como o app não é
    verificado, o Google mostra "O Google não verificou este app": clique em **Avançado → Acessar
    (não seguro)**. É o seu próprio app, então é seguro continuar. Também dá para conectar pelo painel
-   (botão **＋ Live → Conectar canal do YouTube**).
+   (clique no **selo do canal**, no topo da tela, ou em **Conta → Seus canais → Conectar YouTube**).
 
    ```bash
    python esteira.py youtube autenticar --canal <id_do_seu_canal>

@@ -3,7 +3,7 @@
      painel responde (rede primeiro, cópia guardada só se o painel estiver desligado).
    - Nunca guarda dados das contas (/api), vídeos (/arquivos), músicas (/trilhas) nem fotos do canal.
    - Se o painel estiver desligado, mostra um aviso amigável no lugar da página de erro do navegador. */
-const VERSAO = "cortes-v2";
+const VERSAO = "cortes-v3";
 const CASCA = [
   "/static/estilo.css", "/static/js/app.js", "/static/js/base.js", "/static/js/estado.js", "/static/js/entrada.js",
   "/static/js/lives.js", "/static/js/fontes.js", "/static/js/projetos.js", "/static/js/momentos.js", "/static/js/legenda.js",

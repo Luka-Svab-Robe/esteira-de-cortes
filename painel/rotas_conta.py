@@ -22,10 +22,15 @@ def _eh_canal_de_cortes(canal_id: str) -> bool:
 
 
 def _resposta_sessao(usuario: dict | None) -> dict:
+    modo = contas.modo_acesso()
     if not usuario:
-        return {"usuario": None, "precisa_setup": not contas.existe_algum_usuario()}
-    return {"usuario": {**usuario, "publico": contas.perfil_visivel(usuario)}, "precisa_setup": False,
+        return {"usuario": None, "precisa_setup": modo is None, "modo": modo}
+    return {"usuario": {**usuario, "publico": contas.perfil_visivel(usuario)}, "precisa_setup": False, "modo": modo,
             "canais": contas.canais_do_usuario(usuario["id"])}
+
+
+def _adotar_canais_existentes(usuario: dict) -> None:
+    contas.adotar_canais_sem_dono(usuario["id"], [c for c in Canal.listar() if _eh_canal_de_cortes(c)])
 
 
 @router.get("/api/sessao")
@@ -35,9 +40,19 @@ def ver_sessao():
 
 @router.post("/api/setup")
 def primeiro_acesso(request: Request, corpo: dict = Body(...)):
-    """Cria o administrador (só quando ainda não existe ninguém) e passa para ele os canais que já existiam."""
+    """Primeiro acesso (só quando ainda não existe ninguém). modo "aberto": usar sem senha neste computador;
+    senão cria o administrador com e-mail e senha. Os canais que já existiam passam a ser dessa conta."""
     if contas.existe_algum_usuario():
         raise HTTPException(409, {"mensagem": "A plataforma já foi configurada. Entre com sua conta."})
+    if corpo.get("modo") == "aberto":
+        if not sessao.acesso_local(request):
+            raise HTTPException(400, {"mensagem": "O uso sem senha só pode ser escolhido neste próprio computador."})
+        try:
+            usuario = contas.criar_usuario_local(str(corpo.get("nome", "")))
+        except contas.PlataformaJaConfigurada as exc:
+            raise HTTPException(409, {"mensagem": str(exc)})
+        _adotar_canais_existentes(usuario)
+        return _resposta_sessao(usuario)
     try:
         usuario = contas.criar_usuario(corpo.get("email", ""), corpo.get("nome", ""), corpo.get("senha", ""), "admin",
                                        primeiro=True)
@@ -45,7 +60,7 @@ def primeiro_acesso(request: Request, corpo: dict = Body(...)):
         raise HTTPException(409, {"mensagem": str(exc)})
     except ValueError as exc:
         raise HTTPException(400, {"mensagem": str(exc)})
-    contas.adotar_canais_sem_dono(usuario["id"], [c for c in Canal.listar() if _eh_canal_de_cortes(c)])
+    _adotar_canais_existentes(usuario)
     resposta = JSONResponse(_resposta_sessao(usuario))
     sessao.gravar_cookie(resposta, contas.criar_sessao(usuario["id"], request.headers.get("user-agent", "")), request)
     return resposta
@@ -98,6 +113,38 @@ def mudar_senha(request: Request, corpo: dict = Body(...)):
     resposta = JSONResponse({"ok": True})  # as outras sessões caíram; esta ganha um token novo
     sessao.gravar_cookie(resposta, contas.criar_sessao(usuario["id"], request.headers.get("user-agent", "")), request)
     return resposta
+
+
+@router.post("/api/conta/proteger")
+def proteger_com_senha(request: Request, corpo: dict = Body(...)):
+    """Modo aberto → protegido: a conta local ganha e-mail e senha e o painel passa a pedir login."""
+    usuario = sessao.usuario_atual()
+    if contas.modo_acesso() != "aberto":
+        raise HTTPException(409, {"mensagem": "O painel já pede e-mail e senha."})
+    sessao.registrar_tentativa(f"proteger|{usuario['id']}", limite=5, janela=600)
+    try:
+        protegido = contas.proteger_conta(usuario["id"], str(corpo.get("email", "")), str(corpo.get("senha", "")))
+    except ValueError as exc:
+        raise HTTPException(400, {"mensagem": str(exc)})
+    resposta = JSONResponse(_resposta_sessao(protegido))
+    sessao.gravar_cookie(resposta, contas.criar_sessao(protegido["id"], request.headers.get("user-agent", "")), request)
+    return resposta
+
+
+@router.post("/api/conta/sem-senha")
+def usar_sem_senha(request: Request, corpo: dict = Body(...)):
+    """Modo protegido → aberto: só o administrador, confirmando a senha, neste computador e sem equipe ativa."""
+    admin = sessao.exigir_admin()
+    if contas.modo_acesso() != "protegido":
+        raise HTTPException(409, {"mensagem": "O painel já está sem senha."})
+    if not sessao.acesso_local(request):
+        raise HTTPException(400, {"mensagem": "O uso sem senha só pode ser ligado neste próprio computador."})
+    sessao.registrar_tentativa(f"sem-senha|{admin['id']}", limite=5, janela=600)
+    try:
+        contas.liberar_sem_senha(admin["id"], str(corpo.get("senha", "")))
+    except ValueError as exc:
+        raise HTTPException(400, {"mensagem": str(exc)})
+    return _resposta_sessao(admin)
 
 
 # ------------------------------------------------------------------ conexões externas
@@ -184,6 +231,8 @@ def listar_usuarios():
 @router.post("/api/usuarios")
 def criar_usuario(corpo: dict = Body(...)):
     sessao.exigir_admin()
+    if contas.modo_acesso() == "aberto":
+        raise HTTPException(409, {"mensagem": "Para ter equipe, ative o login com e-mail e senha na aba Conta."})
     try:
         u = contas.criar_usuario(corpo.get("email", ""), corpo.get("nome", ""), corpo.get("senha", ""),
                                  "admin" if corpo.get("papel") == "admin" else "usuario")

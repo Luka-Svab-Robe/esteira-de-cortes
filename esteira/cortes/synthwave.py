@@ -5,7 +5,6 @@ usada e monetizada sem crédito. Só numpy (filtros por FFT, reverb por convolu�
 """
 from __future__ import annotations
 
-import math
 import wave
 from pathlib import Path
 

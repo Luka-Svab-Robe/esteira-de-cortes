@@ -1,5 +1,5 @@
 /* Aba Conta: perfil (e o que fica visível), senha, conexões (chaves de IA e endpoints), canais e usuários. */
-import { $, api, avisar, comCarregando, el, gravar, postar } from "./base.js";
+import { $, api, avisar, comCarregando, confirmar, el, gravar, postar } from "./base.js";
 import { abrirYoutube } from "./canal.js";
 import { estado, guardarPreferencia } from "./estado.js";
 import { seletorModelo } from "./lives.js";
@@ -20,12 +20,55 @@ export async function renderConta() {
     raiz.replaceChildren(el("div", { class: "aviso erro", text: e.message }));
     return;
   }
-  raiz.replaceChildren(
+  const aberto = estado.sessao.modo === "aberto";
+  raiz.replaceChildren(...[  // seções que não se aplicam ficam null e saem (senão o navegador escreve "null" na tela)
     secao("Seu perfil", "Escolha o que aparece para a equipe no site.", formPerfil(conta)),
     secao("Conexões", "Chaves das IAs e endpoints que a SUA esteira usa. Ficam cifradas; ninguém mais vê.", formConexoes(conexoes)),
     secao("Seus canais", "Conecte o YouTube, escolha o modelo visual e os padrões dos cortes.", canais()),
-    secao("Senha", "", formSenha()),
-    conta.papel === "admin" ? secao("Equipe", "Crie contas para quem trabalha com você. Cada um vê só os próprios canais.", usuarios()) : null);
+    aberto
+      ? secao("Entrar com senha", "Hoje o painel abre direto neste computador, sem senha. Se outras pessoas usam este PC ou se você quer ter uma equipe, proteja com e-mail e senha.", formProteger())
+      : secao("Senha e acesso", "", formSenha(), conta.papel === "admin" ? formSemSenha() : null),
+    conta.papel === "admin" && !aberto ? secao("Equipe", "Crie contas para quem trabalha com você. Cada um vê só os próprios canais.", usuarios()) : null,
+  ].filter(Boolean));
+}
+
+/* ------------------------------------------------------------ modo de acesso (com ou sem senha) */
+function formProteger() {
+  const email = el("input", { type: "email", autocomplete: "username" });
+  const senha = el("input", { type: "password", autocomplete: "new-password", minlength: "8" });
+  const repetir = el("input", { type: "password", autocomplete: "new-password" });
+  const botao = el("button", { class: "botao cta", type: "button", text: "🔒 Proteger com senha" });
+  botao.addEventListener("click", () => comCarregando(botao, "Protegendo…", async () => {
+    if (senha.value !== repetir.value) return avisar("As senhas não são iguais.", "erro");
+    try {
+      await postar("/api/conta/proteger", { email: email.value, senha: senha.value });
+      avisar("Pronto! Daqui em diante o painel pede e-mail e senha.", "ok");
+      setTimeout(() => location.reload(), 900);
+    } catch (e) { avisar(e.message, "erro"); }
+  }));
+  return el("div", {}, el("div", { class: "grade-campos" },
+    el("label", { class: "campo" }, "E-mail", email), el("label", { class: "campo" }, "Senha (8+ letras)", senha),
+    el("label", { class: "campo" }, "Repita a senha", repetir)), el("div", { class: "acoes" }, botao));
+}
+
+function formSemSenha() {
+  const senha = el("input", { type: "password", autocomplete: "current-password" });
+  const botao = el("button", { class: "botao perigo", type: "button", text: "🔓 Usar sem senha neste computador" });
+  botao.addEventListener("click", async () => {
+    if (!(await confirmar("Deixar de pedir senha?", { ok: "Usar sem senha", perigo: true,
+      detalhe: "Quem usar este computador abre o painel direto, na sua conta. Pela rede continua fechado." }))) return;
+    comCarregando(botao, "Mudando…", async () => {
+      try {
+        await postar("/api/conta/sem-senha", { senha: senha.value });
+        avisar("Pronto! O painel não pede mais senha neste computador.", "ok");
+        setTimeout(() => location.reload(), 900);
+      } catch (e) { avisar(e.message, "erro"); }
+    });
+  });
+  return el("details", { class: "novo-canal" }, el("summary", { text: "Usar sem senha neste computador" }),
+    el("p", { class: "pequeno", text: "Só se apenas você usa este PC. As contas da equipe precisam estar desativadas. Confirme com a sua senha atual." }),
+    el("div", { class: "grade-campos" }, el("label", { class: "campo" }, "Senha atual", senha)),
+    el("div", { class: "acoes" }, botao));
 }
 
 const secao = (titulo, texto, ...conteudo) => el("section", { class: "card secao-conta" },
@@ -48,11 +91,13 @@ function formPerfil(conta) {
       el("div", {}, el("strong", { text: nomeExibido }),
         ...["bio", "cidade", "site", "instagram", "telefone"].filter((c) => visivel[c].checked && campos[c].value.trim())
           .map((c) => el("div", { class: "pequeno", text: campos[c].value.trim() })),
-        visivel.email.checked ? el("div", { class: "pequeno", text: conta.email }) : null));
+        visivel.email.checked && estado.sessao.modo !== "aberto" ? el("div", { class: "pequeno", text: conta.email }) : null));
   };
   const linhas = [
     el("div", { class: "linha-perfil" }, el("label", { class: "campo" }, "Nome", nome), chave("nome", true)),
-    el("div", { class: "linha-perfil" }, el("label", { class: "campo" }, "E-mail", el("input", { type: "email", value: conta.email, disabled: true })), chave("email", false)),
+    el("div", { class: "linha-perfil" }, el("label", { class: "campo" }, "E-mail", el("input", estado.sessao.modo === "aberto"
+      ? { type: "text", value: "", placeholder: "sem e-mail (uso sem senha)", disabled: true }
+      : { type: "email", value: conta.email, disabled: true })), chave("email", false)),
     ...conta.campos.map((campo) => {
       const entrada = campo === "bio" ? el("textarea", { rows: 2, maxlength: "300", value: conta.perfil[campo] || "" })
         : el("input", { type: "text", maxlength: "300", value: conta.perfil[campo] || "" });

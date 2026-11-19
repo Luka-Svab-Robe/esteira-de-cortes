@@ -202,7 +202,7 @@ export function abrirOpcoes(live) {
       comecar.textContent = "Começar";
     }
   });
-  dialogo.append(
+  dialogo.append(...[
     el("h2", { class: "titulo-gta", text: "Como você quer cortar?" }),
     el("p", { class: "pequeno" },
       live.plataforma ? el("span", { class: `selo-plataforma ${live.plataforma}`, text: PLATAFORMAS[live.plataforma] || live.plataforma }) : null,
@@ -225,7 +225,8 @@ export function abrirOpcoes(live) {
     el("label", { class: "marcar" }, traduzir, "Traduzir para o português o que for falado em outra língua"),
     el("details", { open: live.no_ar ? true : null }, el("summary", { class: "pequeno", text: "Cortar só um pedaço da live?" }),
       el("div", { class: "linha-trecho" }, ini, el("span", { class: "pequeno", text: "até" }), fim)),
-    el("div", { class: "acoes" }, comecar, el("button", { class: "botao", type: "button", text: "Voltar", onclick: fechar })));
+    el("div", { class: "acoes" }, comecar, el("button", { class: "botao", type: "button", text: "Voltar", onclick: fechar })),
+  ].filter(Boolean));
   dialogo.addEventListener("cancel", fechar);
   document.body.append(dialogo);
   dialogo.showModal();

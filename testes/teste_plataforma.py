@@ -363,6 +363,73 @@ def legenda_editada_a_mao_e_refeita():
         _espera_http(r.salvar_legenda, 409, "canal_teste", pasta.name, 1, {"automatica": True})
 
 
+def _pedido(host: str, cliente: str) -> SimpleNamespace:
+    return SimpleNamespace(headers={"host": host}, client=SimpleNamespace(host=cliente), cookies={})
+
+
+@teste
+def primeiro_acesso_escolhe_com_ou_sem_senha():
+    from painel import contas, rotas_conta, sessao
+
+    antigos = (contas.PASTA_DADOS, contas.BANCO, contas.CHAVE)
+    with tempfile.TemporaryDirectory() as tmp:  # banco só deste teste: o primeiro acesso exige ninguém cadastrado
+        contas.PASTA_DADOS, contas.BANCO, contas.CHAVE = Path(tmp), Path(tmp) / "p.db", Path(tmp) / ".chave"
+        try:
+            contas.iniciar()
+            assert contas.modo_acesso() is None and contas.usuario_aberto() is None
+            local, rede = _pedido("127.0.0.1:8765", "127.0.0.1"), _pedido("minha-maquina.lan:8765", "192.168.0.5")
+            assert sessao.acesso_local(local) and sessao.acesso_local(_pedido("[::1]:8765", "::1"))
+            assert not sessao.acesso_local(rede) and not sessao.acesso_local(_pedido("127.0.0.1:8765", "192.168.0.5"))
+            assert not sessao.acesso_local(_pedido("minha-maquina.lan", "127.0.0.1"))  # nome de rede liberado: pede senha
+            _espera_http(rotas_conta.primeiro_acesso, 400, rede, {"modo": "aberto"})  # sem senha só neste computador
+
+            resposta = rotas_conta.primeiro_acesso(local, {"modo": "aberto", "nome": "Ana"})
+            dono = resposta["usuario"]
+            assert resposta["modo"] == "aberto" and dono["papel"] == "admin" and dono["nome"] == "Ana"
+            assert sessao.usuario_da_requisicao(local)["id"] == dono["id"]
+            assert sessao.usuario_da_requisicao(rede) is None  # pela rede continua fechado
+            assert contas.autenticar(contas.EMAIL_LOCAL, "") is None  # a conta local não entra pela tela de login
+            _espera_http(rotas_conta.primeiro_acesso, 409, local, {"modo": "aberto"})
+            try:
+                contas.criar_usuario("outro@exemplo.com", "Outro", "senha-forte-123", "admin", primeiro=True)
+                raise AssertionError("criou um segundo primeiro acesso")
+            except contas.PlataformaJaConfigurada:
+                pass
+
+            token = sessao.USUARIO.set(dono)
+            try:
+                _espera_http(rotas_conta.criar_usuario, 409, {"email": "equipe@exemplo.com", "nome": "E", "senha": "senha-forte-123"})
+            finally:
+                sessao.USUARIO.reset(token)
+            for email, senha in ((contas.EMAIL_LOCAL, "senha-forte-123"), ("ana@exemplo.com", "curta")):
+                try:
+                    contas.proteger_conta(dono["id"], email, senha)
+                    raise AssertionError(f"aceitou {email!r}/{senha!r}")
+                except ValueError:
+                    pass
+            protegido = contas.proteger_conta(dono["id"], "ana@exemplo.com", "senha-forte-123")
+            assert contas.modo_acesso() == "protegido" and contas.usuario_aberto() is None
+            assert sessao.usuario_da_requisicao(local) is None
+            assert contas.autenticar("ana@exemplo.com", "senha-forte-123")["id"] == protegido["id"]
+
+            equipe = contas.criar_usuario("equipe@exemplo.com", "Equipe", "senha-forte-123")
+            for senha in ("errada", "senha-forte-123"):  # senha errada; depois a equipe ainda ativa
+                try:
+                    contas.liberar_sem_senha(protegido["id"], senha)
+                    raise AssertionError("liberou sem senha")
+                except ValueError:
+                    pass
+            contas.definir_ativo(equipe["id"], False)
+            contas.liberar_sem_senha(protegido["id"], "senha-forte-123")
+            assert contas.modo_acesso() == "aberto" and contas.usuario_aberto()["id"] == protegido["id"]
+
+            with contas._con() as con:  # banco antigo (sem a tabela de modo) e com contas: continua pedindo senha
+                con.execute("DELETE FROM config")
+            assert contas.modo_acesso() == "protegido" and contas.usuario_aberto() is None
+        finally:
+            contas.PASTA_DADOS, contas.BANCO, contas.CHAVE = antigos
+
+
 def main() -> int:
     falhas = 0
     for func in TESTES:

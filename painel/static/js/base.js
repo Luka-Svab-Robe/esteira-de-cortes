@@ -58,13 +58,14 @@ export function confirmar(texto, { ok = "Confirmar", perigo = false, detalhe = "
   return new Promise((resolver) => {
     const dialogo = el("dialog", { class: "dialogo" });
     const fechar = (valor) => { dialogo.close(); dialogo.remove(); resolver(valor); };
-    dialogo.append(
+    dialogo.append(...[
       el("h2", { class: "titulo-gta", text: "Confirmar" }),
       el("p", { text: texto }),
       detalhe ? el("p", { class: "pequeno", text: detalhe }) : null,
       el("div", { class: "acoes" },
         el("button", { class: `botao ${perigo ? "perigo" : "cta"}`, type: "button", text: ok, onclick: () => fechar(true) }),
-        el("button", { class: "botao", type: "button", text: "Voltar", onclick: () => fechar(false) })));
+        el("button", { class: "botao", type: "button", text: "Voltar", onclick: () => fechar(false) })),
+    ].filter(Boolean));
     dialogo.addEventListener("cancel", () => fechar(false));
     document.body.append(dialogo);
     dialogo.showModal();

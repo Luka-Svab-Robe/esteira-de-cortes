@@ -1,4 +1,8 @@
-"""Sessão e segurança do painel: quem está logado (ContextVar por requisição), proteção das rotas e limite de login."""
+"""Sessão e segurança do painel: quem está logado (ContextVar por requisição), proteção das rotas e limite de login.
+
+Dois modos (escolhidos no primeiro acesso, trocáveis na aba Conta): "protegido" pede e-mail e senha; "aberto" entra
+direto na conta local de quem usa este computador — só para pedidos vindos de 127.0.0.1/::1 pelo endereço local.
+"""
 from __future__ import annotations
 
 import time
@@ -55,9 +59,29 @@ def gravar_cookie(resposta, token: str, request: Request) -> None:
                         secure=request.url.scheme == "https", path="/")
 
 
+HOSTS_LOCAIS = {"127.0.0.1", "localhost", "[::1]"}
+CLIENTES_LOCAIS = {"127.0.0.1", "::1"}
+
+
+def acesso_local(request: Request) -> bool:
+    """O pedido veio deste computador e pelo endereço local do painel (não por um nome de rede liberado)."""
+    host = (request.headers.get("host") or "").strip().lower()
+    host = host.split("]")[0] + "]" if host.startswith("[") else host.rsplit(":", 1)[0]
+    cliente = request.client.host if request.client else ""
+    return host in HOSTS_LOCAIS and cliente in CLIENTES_LOCAIS
+
+
+def usuario_da_requisicao(request: Request) -> dict | None:
+    """Quem está usando: a conta do cookie de login ou, no modo aberto e só neste computador, a conta local."""
+    usuario = contas.usuario_da_sessao(request.cookies.get(COOKIE))
+    if usuario or not acesso_local(request):
+        return usuario
+    return contas.usuario_aberto()
+
+
 async def middleware(request: Request, call_next):
     caminho = request.url.path
-    usuario = contas.usuario_da_sessao(request.cookies.get(COOKIE))
+    usuario = usuario_da_requisicao(request)
     USUARIO.set(usuario)
     livre = caminho in LIVRES or caminho.startswith(PREFIXOS_LIVRES)
     if not livre and not usuario:

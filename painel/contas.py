@@ -64,6 +64,7 @@ def iniciar() -> None:
         CREATE TABLE IF NOT EXISTS canais_dono (
             canal_id TEXT PRIMARY KEY, usuario_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE);
         CREATE INDEX IF NOT EXISTS idx_sessoes_usuario ON sessoes(usuario_id);
+        CREATE TABLE IF NOT EXISTS config (chave TEXT PRIMARY KEY, valor TEXT NOT NULL);
         """)
     for arquivo in (BANCO, CHAVE):
         if arquivo.exists():
@@ -117,11 +118,96 @@ class PlataformaJaConfigurada(Exception):
     pass
 
 
+# ------------------------------------------------------------------ modo de acesso (com ou sem senha)
+# "protegido": cada pessoa entra com e-mail e senha. "aberto": quem usa este computador entra direto, sem senha,
+# numa conta local de administrador (o painel só escuta em 127.0.0.1). Bancos antigos, que já têm contas, são
+# "protegido" sem mudar nada.
+EMAIL_LOCAL = "local@localhost"
+
+
+def _config(con: sqlite3.Connection, chave: str) -> str | None:
+    linha = con.execute("SELECT valor FROM config WHERE chave = ?", (chave,)).fetchone()
+    return linha["valor"] if linha else None
+
+
+def modo_acesso() -> str | None:
+    """aberto | protegido | None (ninguém configurou ainda: o primeiro acesso pergunta)."""
+    with _con() as con:
+        modo = _config(con, "modo_acesso")
+        if modo:
+            return modo
+        return "protegido" if con.execute("SELECT 1 FROM usuarios LIMIT 1").fetchone() else None
+
+
+def usuario_aberto() -> dict | None:
+    """No modo aberto, a conta que fica entrada para quem usa este computador."""
+    with _con() as con:
+        if _config(con, "modo_acesso") != "aberto":
+            return None
+        usuario_id = _config(con, "usuario_aberto")
+        linha = con.execute("SELECT * FROM usuarios WHERE id = ? AND ativo = 1", (usuario_id,)).fetchone()
+    return _publico(linha)
+
+
+def criar_usuario_local(nome: str) -> dict:
+    """Primeiro acesso sem senha: cria a conta local de administrador e liga o modo aberto (só se não houver ninguém)."""
+    nome = (nome or "").strip()[:120] or "Você"
+    with _con() as con:
+        con.execute("BEGIN IMMEDIATE")
+        try:
+            if con.execute("SELECT 1 FROM usuarios LIMIT 1").fetchone():
+                raise PlataformaJaConfigurada("A plataforma já foi configurada. Entre com sua conta.")
+            cur = con.execute("INSERT INTO usuarios (email, nome, senha_hash, papel, criado_em) VALUES (?, ?, '', 'admin', ?)",
+                              (EMAIL_LOCAL, nome, time.time()))
+            con.execute("INSERT OR REPLACE INTO config VALUES ('modo_acesso', 'aberto')")
+            con.execute("INSERT OR REPLACE INTO config VALUES ('usuario_aberto', ?)", (str(cur.lastrowid),))
+            con.execute("COMMIT")
+        except BaseException:
+            con.execute("ROLLBACK")
+            raise
+    return usuario(cur.lastrowid)
+
+
+def proteger_conta(usuario_id: int, email: str, senha: str) -> dict:
+    """Modo aberto → protegido: a conta local ganha e-mail e senha, e o painel passa a pedir login."""
+    email = _email_valido(email)
+    validar_senha(senha)
+    try:
+        with _con() as con:
+            con.execute("UPDATE usuarios SET email = ?, senha_hash = ? WHERE id = ?", (email, _hash_senha(senha), usuario_id))
+            con.execute("INSERT OR REPLACE INTO config VALUES ('modo_acesso', 'protegido')")
+            con.execute("DELETE FROM config WHERE chave = 'usuario_aberto'")
+    except sqlite3.IntegrityError:
+        raise ValueError("Já existe uma conta com esse e-mail.")
+    return usuario(usuario_id)
+
+
+def liberar_sem_senha(usuario_id: int, senha: str) -> None:
+    """Modo protegido → aberto (só o administrador, confirmando a senha, e sem outras contas ativas na equipe)."""
+    with _con() as con:
+        linha = con.execute("SELECT senha_hash, papel FROM usuarios WHERE id = ?", (usuario_id,)).fetchone()
+        outros = con.execute("SELECT COUNT(*) FROM usuarios WHERE ativo = 1 AND id != ?", (usuario_id,)).fetchone()[0]
+    if not linha or linha["papel"] != "admin":
+        raise ValueError("Só o administrador pode fazer isso.")
+    if not _confere_senha(senha or "", linha["senha_hash"]):
+        raise ValueError("A senha não confere.")
+    if outros:
+        raise ValueError("Há outras contas ativas na equipe. Desative-as antes de usar sem senha.")
+    with _con() as con:
+        con.execute("INSERT OR REPLACE INTO config VALUES ('modo_acesso', 'aberto')")
+        con.execute("INSERT OR REPLACE INTO config VALUES ('usuario_aberto', ?)", (str(usuario_id),))
+
+
+def _email_valido(email: str) -> str:
+    email = (email or "").strip().lower()
+    if "@" not in email or len(email) > 200 or email == EMAIL_LOCAL:
+        raise ValueError("Informe um e-mail válido.")
+    return email
+
+
 def criar_usuario(email: str, nome: str, senha: str, papel: str = "usuario", primeiro: bool = False) -> dict:
     """Cria uma conta. Com primeiro=True só cria se ainda não houver ninguém (checagem e inserção na mesma transação)."""
-    email = (email or "").strip().lower()
-    if "@" not in email or len(email) > 200:
-        raise ValueError("Informe um e-mail válido.")
+    email = _email_valido(email)
     if not (nome or "").strip():
         raise ValueError("Informe o nome.")
     validar_senha(senha)

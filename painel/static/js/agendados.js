@@ -78,7 +78,7 @@ export async function renderAgendados(forcar = false) {
   if (nova === assinatura && !forcar) return;
   assinatura = nova;
   const horario = (d.horarios || []).join(", ");
-  raiz.replaceChildren(
+  raiz.replaceChildren(...[
     el("div", { class: "resumo-agenda" },
       el("div", { class: "numero" }, el("strong", { text: String(d.agendados.length) }), "agendados"),
       el("div", { class: "numero" }, el("strong", { text: String(d.fila.length) }), "na fila de envio"),
@@ -97,5 +97,6 @@ export async function renderAgendados(forcar = false) {
       (s) => linha(s, { data: quando(s.quando), pill: el("span", { class: "pill publicado", text: "No ar" }),
         acoes: [botaoYoutube(s), botaoRetirar(s)] })),
     secao("Fora da agenda", d.retirados, "Nenhum Short retirado.",
-      (s) => linha(s, { data: quando(s.quando), pill: el("span", { class: "pill erro", text: "Privado" }), acoes: [botaoYoutube(s)] })));
+      (s) => linha(s, { data: quando(s.quando), pill: el("span", { class: "pill erro", text: "Privado" }), acoes: [botaoYoutube(s)] })),
+  ].filter(Boolean));
 }

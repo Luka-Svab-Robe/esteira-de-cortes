@@ -187,8 +187,11 @@ publicação a esteira repõe as que faltarem, mesmo em textos reescritos à mã
 | "Fique de olho nas lives" | painel → aba Canais → chave "Vigiar" em cada canal + Painel → Modo automático ligado (ou `automacao ativar --canal C`). Só os canais com `monitorar: true` em `fontes.yaml` são vigiados |
 | "Pode agendar sem eu revisar" (explícito) | painel → "Agendar sem eu revisar" (`automacao.revisao_humana_obrigatoria: false`). Só com pedido explícito |
 
-**Painel (http://127.0.0.1:8765, tema Vice City) — plataforma multiusuário.** Cada pessoa entra com e-mail e senha
-(o primeiro acesso cria o administrador e passa para ele os canais que já existiam). Cada usuário vê **só os próprios
+**Painel (http://127.0.0.1:8765, tema Vice City) — com ou sem senha.** No primeiro acesso a pessoa escolhe:
+🔓 **usar sem senha** (abre direto neste computador, numa conta local de administrador; pela rede continua fechado) ou
+🔒 **proteger com e-mail e senha** (login; permite equipe com contas separadas). Os canais que já existiam passam para
+essa conta. Dá para trocar depois em **Conta → Senha e acesso** (sem senha → protegido a qualquer momento; protegido →
+sem senha só o administrador, confirmando a senha e sem outras contas ativas). Cada usuário vê **só os próprios
 canais, lives e Shorts**; as chaves de IA de cada um (aba Conta → Conexões) ficam cifradas e valem só para a esteira dele.
 Abas:
 - **Canais** — os canais de onde vêm as lives (Twitch, Kick ou YouTube), **quantos o usuário quiser**: integrar (link do
@@ -213,7 +216,8 @@ Etapas pela linha de comando: `cortes processar … --ate ingestao` (só baixa),
 --a-partir-de analise --ate analise` (só escolhe momentos), `--a-partir-de edicao` (edita); opções por live com
 `--opcoes '{"max_cortes_por_live": 3, "modelo": "centro"}'`. Estado entre etapas: `aguardando_etapa`.
 
-**Nunca crie a conta do usuário nem digite senhas por ele**: o primeiro acesso é feito por ele no navegador.
+**Nunca crie a conta do usuário nem digite senhas por ele**: o primeiro acesso (e a escolha entre usar sem senha ou
+proteger com e-mail e senha) é feito por ele no navegador.
 Para testar sem tocar no painel nem no banco reais: `PLATAFORMA_DADOS=<pasta temporária> python esteira.py painel
 --sem-navegador --porta 8799` (crie lá uma conta de teste). Testes offline: `python testes/teste_cortes.py` e
 `python testes/teste_plataforma.py`. Depois de cada processamento, peça ao `revisor-de-qualidade` a checagem antes de

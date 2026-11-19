@@ -75,6 +75,7 @@ function renderUsuario() {
   const nome = publico.nome_publico || publico.nome || u.nome;
   $("#usuario-nome").textContent = nome;
   $("#usuario-letra").textContent = (nome || "?").slice(0, 1).toUpperCase();
+  $("#btn-sair").classList.toggle("oculto", estado.sessao.modo === "aberto");  // sem senha não há de onde sair
 }
 
 function aplicarEndereco() {

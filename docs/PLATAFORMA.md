@@ -1,4 +1,4 @@
-# Plataforma multiusuário — desenho e estado da implementação (concluída em 17/11/2026)
+# Plataforma (com ou sem senha) — desenho e estado da implementação (login opcional em 19/11/2026)
 
 Evolução do painel de cortes (FastAPI + JS puro) para uma plataforma com contas, pipeline por etapas,
 vitrine de serviços, 3 templates e conexões por usuário. Mantém a esteira (`esteira/cortes/*`) como motor.
@@ -6,10 +6,18 @@ vitrine de serviços, 3 templates e conexões por usuário. Mantém a esteira (`
 ## Backend
 - `painel/contas.py` ✅ — SQLite `dados/plataforma.db`: `usuarios` (scrypt, papel admin/usuario, perfil + visibilidade),
   `sessoes` (só hash SHA-256 do token, 30 dias deslizantes), `conexoes` (Fernet, chave em `dados/.chave_plataforma`),
-  `canais_dono` (canal → usuário). `ambiente_do_usuario()` vira env dos subprocessos da esteira.
+  `canais_dono` (canal → usuário), `config` (`modo_acesso` = aberto|protegido e `usuario_aberto`).
+  `ambiente_do_usuario()` vira env dos subprocessos da esteira.
+- Modo de acesso ✅ — escolhido no primeiro acesso: **aberto** (conta local de administrador sem senha, e-mail
+  interno `local@localhost`, que não entra pela tela de login; o middleware a usa só quando não há cookie e o pedido
+  vem de 127.0.0.1/::1 pelo endereço local, então nomes liberados em `PAINEL_HOSTS` continuam pedindo login) ou
+  **protegido** (e-mail e senha). Troca: `/api/conta/proteger` (aberto → protegido) e `/api/conta/sem-senha`
+  (protegido → aberto: admin, senha atual, sem outras contas ativas, só neste computador). No modo aberto não se
+  criam contas de equipe. Bancos antigos sem `config` e com contas são tratados como protegido.
 - `painel/sessao.py` + `painel/servidor.py` ✅ — middleware de sessão (cookie `sessao`, HttpOnly, SameSite=Lax) que põe o usuário num
   ContextVar; rotas que mudam algo exigem o cabeçalho `X-Esteira: 1` (anti-CSRF). Rotas novas:
-  `/api/sessao`, `/api/setup` (1º admin; adota canais sem dono), `/api/login`, `/api/logout`,
+  `/api/sessao` (traz o `modo`), `/api/setup` (1º acesso: `modo` aberto ou admin com senha; adota canais sem dono),
+  `/api/login`, `/api/logout`, `/api/conta/proteger`, `/api/conta/sem-senha`,
   `/api/conta` (perfil + visibilidade), `/api/conta/senha`, `/api/conexoes` (+ `/testar`), `/api/usuarios` (admin),
   `/api/canais/novo` (criar canal de cortes), etapas: `/api/projetos/{c}/{p}/etapas/{etapa}` (executar uma etapa),
   `/api/projetos/{c}/{p}/momentos` (GET/PUT edição manual dos cortes), `/api/copiloto` (sugestões de texto),

@@ -164,11 +164,11 @@ export function renderYoutube() {
     try { conectando = true; await postar(`/api/canais/${c.id}/youtube`); recarregar(); }
     catch (e) { conectando = false; avisar(e.message, "erro"); }
   });
-  corpo.replaceChildren(
+  corpo.replaceChildren(...[
     yt.erro ? el("p", { class: "aviso erro", text: yt.erro }) : null,
     yt.conectado
       ? el("p", {}, "Vinculado a ", el("strong", { text: yt.nome || "seu canal" }), yt.handle ? ` (${yt.handle})` : "", ". As lives dele aparecem no painel.")
       : el("p", { text: "Conecte o canal do YouTube: as lives dele aparecem aqui para cortar e os Shorts são publicados nele." }),
     yt.conectado ? el("p", { class: "pequeno", text: "Enquanto o app do Google estiver em modo Teste, a conexão vence a cada 7 dias. Se algo falhar, reconecte aqui." }) : null,
-    botao);
+    botao].filter(Boolean));
 }

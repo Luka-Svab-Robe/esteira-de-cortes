@@ -2,7 +2,7 @@
 
 Esta pasta vem vazia: cada pessoa cria os próprios canais.
 
-- **Pelo painel:** abra o app, entre (o primeiro acesso cria a sua conta de administrador) e vá em
+- **Pelo painel:** abra o app, entre (no primeiro acesso você escolhe usar sem senha ou com e-mail e senha) e vá em
   **Conta → Seus canais → Criar canal**.
 - **Pelo terminal:** `python esteira.py canal criar --nome "Meu Canal" --nicho "…" --tom "…" --paleta "…" --ritmo medio`
   (para um canal de cortes de lives, acrescente `--tipo cortes`).
