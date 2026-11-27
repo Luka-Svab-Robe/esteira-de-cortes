@@ -459,6 +459,72 @@ def primeiro_acesso_escolhe_com_ou_sem_senha():
             contas.PASTA_DADOS, contas.BANCO, contas.CHAVE = antigos
 
 
+@teste
+def aba_apis_guarda_o_app_do_google_sem_mostrar_o_segredo():
+    """Aba APIs: só o administrador grava o app do Google; o segredo nunca volta na resposta; um canal só fica
+    'conectado' quando o token existe; cada usuário vê só os próprios canais de cortes."""
+    from esteira import canal as canal_mod
+    from esteira.canal import Canal
+    from esteira.modulos import m6_publicacao
+    from painel import contas, rotas_apis, sessao
+
+    ana, bia = _usuario(), _usuario("bia@exemplo.com", "usuario")
+    canal_mod.criar_canal("canal_apis_teste", "Canal APIs", "cortes de lives", "animado", "roxo", "rapido", tipo="cortes")
+    contas.atribuir_canal("canal_apis_teste", ana["id"])
+    id_valido = "123456789012-abcdefgh.apps.googleusercontent.com"
+    segredo = "segredo-de-teste-9876"  # valor falso, sem o prefixo de segredo real do Google
+    with tempfile.TemporaryDirectory() as tmp:
+        arquivo = Path(tmp) / "credenciais" / "client_secret.json"  # nunca o credenciais/ de verdade
+        original = m6_publicacao.caminho_segredo
+        m6_publicacao.caminho_segredo = lambda: arquivo
+        token = sessao.USUARIO.set(ana)
+        try:
+            antes = rotas_apis.ver_apis_youtube()
+            assert antes["app"]["configurado"] is False and antes["pode_editar_app"] is True, antes
+            por_id = {c["id"]: c for c in antes["canais"]}
+            assert por_id["canal_apis_teste"]["conectado"] is False, por_id
+            _espera_http(rotas_apis.salvar_app_youtube, 400, {"client_id": "nao-e-um-id", "client_secret": segredo})
+            _espera_http(rotas_apis.salvar_app_youtube, 400, {"client_id": id_valido, "client_secret": "curto"})
+            assert not arquivo.exists(), "credenciais inválidas não podem ser gravadas"
+
+            outra = sessao.USUARIO.set(bia)
+            try:
+                _espera_http(rotas_apis.salvar_app_youtube, 403, {"client_id": id_valido, "client_secret": segredo})
+                visto_pela_bia = rotas_apis.ver_apis_youtube()
+                assert visto_pela_bia["pode_editar_app"] is False
+                assert "canal_apis_teste" not in [c["id"] for c in visto_pela_bia["canais"]], "canal de outro usuário apareceu"
+            finally:
+                sessao.USUARIO.reset(outra)
+
+            salvo = rotas_apis.salvar_app_youtube({"client_id": id_valido, "client_secret": segredo})
+            assert salvo["configurado"] is True and salvo["client_id"] == id_valido, salvo
+            assert "segredo-de-teste" not in json.dumps(salvo) and salvo["segredo"].endswith("9876"), salvo
+            gravado = json.loads(arquivo.read_text(encoding="utf-8"))["installed"]
+            assert gravado["client_secret"] == segredo and gravado["token_uri"].startswith("https://"), gravado
+            if os.name != "nt":  # no Windows a permissão POSIX não se aplica
+                assert arquivo.stat().st_mode & 0o777 == 0o600, oct(arquivo.stat().st_mode)
+
+            depois = rotas_apis.ver_apis_youtube()
+            assert "segredo-de-teste" not in json.dumps(depois), "o segredo vazou pela aba APIs"
+            assert depois["app"]["configurado"] is True
+            por_id = {c["id"]: c for c in depois["canais"]}
+            assert por_id["canal_apis_teste"]["conectado"] is False
+
+            token_canal = Canal.carregar("canal_apis_teste").caminho_token_youtube
+            token_canal.parent.mkdir(parents=True, exist_ok=True)
+            token_canal.write_text("{}", encoding="utf-8")  # simula a autorização do canal feita no login
+            conectado = rotas_apis.ver_apis_youtube()
+            assert {c["id"]: c for c in conectado["canais"]}["canal_apis_teste"]["conectado"] is True
+            assert conectado["pronto"] is True, conectado  # app + pelo menos um canal conectado
+
+            arquivo.write_text("{não é json", encoding="utf-8")  # arquivo corrompido não derruba a aba
+            corrompido = rotas_apis.ver_apis_youtube()
+            assert corrompido["app"]["configurado"] is False and corrompido["app"]["erro"], corrompido["app"]
+        finally:
+            sessao.USUARIO.reset(token)
+            m6_publicacao.caminho_segredo = original
+
+
 def main() -> int:
     falhas = 0
     for func in TESTES:
