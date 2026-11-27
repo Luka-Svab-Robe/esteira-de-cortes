@@ -168,7 +168,11 @@ def montar_sinais(duracao: int, chat: list[float], heatmap: list[dict], energia:
     if heatmap:
         valores = [0.0] * duracao
         for h in heatmap:
-            for s in range(int(h.get("start_time", 0)), min(duracao, int(math.ceil(h.get("end_time", 0))))):
+            # B02: o trecho pode começar depois de intervalos que já estão antes da janela (índices negativos
+            # escreveriam no fim da lista). Recorta nas duas pontas e ignora o que não cai dentro da duração.
+            ini = max(0, math.floor(float(h.get("start_time", 0))))
+            fim = min(duracao, math.ceil(float(h.get("end_time", 0))))
+            for s in range(ini, fim):
                 valores[s] = float(h.get("value", 0))
         sinais["repetidos"] = _zscore(valores)
     if energia:
