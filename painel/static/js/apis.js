@@ -46,17 +46,61 @@ function resumo(d) {
           el("ul", { class: "pequeno" }, ...faltas.map((f) => el("li", { text: f })))));
 }
 
+/* Passo a passo para criar o app no Google Cloud (texto do guia; a esteira usa o tipo "App para computador"). */
+const PASSOS = [
+  { titulo: "Criar um projeto no Google Cloud",
+    texto: "Acesse o Google Cloud Console e faça login com a sua conta Google. No menu superior, clique no seletor de projetos, depois em Novo Projeto, dê um nome (ex: Automacao-YouTube) e clique em Criar." },
+  { titulo: "Ativar a YouTube Data API v3", marca: ["obrigatório", "ruim"],
+    texto: "Com o projeto selecionado, vá no menu lateral em APIs e serviços > Biblioteca. Pesquise por YouTube Data API v3, clique no resultado e aperte Ativar.",
+    nota: "Obrigatório para evitar erro 403." },
+  { titulo: "Configurar a Tela de permissão OAuth",
+    texto: "No menu lateral, vá em APIs e serviços > Tela de permissão OAuth (ou Google Auth Platform > Público-alvo). Escolha o tipo Externo e clique em Criar. Preencha apenas o nome do aplicativo, o e-mail de suporte e o e-mail do desenvolvedor, e salve." },
+  { titulo: "Adicionar seu e-mail como usuário de teste",
+    texto: "Ainda na tela de permissão OAuth, vá na seção Usuários de teste (Test users), clique em Adicionar usuários e coloque o e-mail da conta dona do seu canal do YouTube.",
+    alerta: "Sem isso, o login será bloqueado." },
+  { titulo: "Gerar as credenciais OAuth 2.0",
+    texto: "Vá em APIs e serviços > Credenciais > + Criar credenciais > ID do cliente OAuth.",
+    itens: [
+      { destaque: "Use este para a esteira", texto: "Se for rodar em um script local (Python/Node.js), escolha App para computador (Desktop app)." },
+      { texto: "Se for usar em ferramentas como n8n ou Make, escolha Aplicativo da Web e cole a URI de redirecionamento que a ferramenta fornecer." },
+    ],
+    depois: "Clique em Criar e faça o download do arquivo JSON (que contém seu Client ID e Client Secret)." },
+];
+
+function guia(app) {
+  return el("details", { class: "guia", open: !app.configurado },
+    el("summary", {}, el("span", { text: "Passo a passo no Google Cloud" }), el("span", { class: "etiqueta", text: `${PASSOS.length} passos` })),
+    el("ol", { class: "guia-passos" }, ...PASSOS.map((p, i) => passo(i + 1, p))),
+    el("p", { class: "guia-fim" }, el("strong", { text: "Próximo passo:" }),
+      " abra o JSON baixado e copie o client_id e o client_secret para os campos abaixo."));
+}
+
+function passo(numero, p) {
+  return el("li", { class: "guia-passo" },
+    el("span", { class: "guia-numero", "aria-hidden": "true", text: String(numero) }),
+    el("div", { class: "guia-corpo" },
+      el("div", { class: "guia-cabeca" }, el("strong", { text: p.titulo }),
+        p.marca ? el("span", { class: `etiqueta ${p.marca[1]}`, text: p.marca[0] }) : null),
+      el("p", { class: "guia-texto", text: p.texto }),
+      p.itens ? el("ul", { class: "guia-itens" }, ...p.itens.map((i) =>
+        el("li", {}, i.destaque ? el("span", { class: "guia-destaque", text: i.destaque }) : null, i.texto))) : null,
+      p.depois ? el("p", { class: "guia-texto", text: p.depois }) : null,
+      p.nota ? el("p", { class: "guia-nota", text: p.nota }) : null,
+      p.alerta ? el("p", { class: "guia-alerta", text: p.alerta }) : null));
+}
+
 function secaoApp(d) {
   const app = d.app;
   const caixa = el("section", { class: "card secao-conta" },
     el("h2", { class: "titulo-gta", text: "App do Google (YouTube)" }),
-    el("p", { class: "pequeno", text: "Criado uma vez no Google Cloud e usado por todos os canais deste computador. O passo a passo está em credenciais/LEIA-ME.md." }));
+    el("p", { class: "pequeno", text: "Criado uma vez no Google Cloud e usado por todos os canais deste computador." }));
   if (!d.pode_editar_app) {
     caixa.append(el("p", { class: "pequeno", text: app.configurado
       ? "Configurado pelo administrador."
       : "Ainda não configurado. Peça ao administrador para colar o ID e o segredo do app." }));
     return caixa;
   }
+  caixa.append(guia(app));
   const id = el("input", { type: "text", autocomplete: "off", spellcheck: "false",
     placeholder: app.configurado ? app.client_id : "123456789-abc.apps.googleusercontent.com" });
   const segredo = el("input", { type: "password", autocomplete: "new-password", spellcheck: "false",
