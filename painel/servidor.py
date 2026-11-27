@@ -28,7 +28,7 @@ from esteira import log, orquestrador, util
 from esteira.canal import Canal
 from esteira.config import PASTA_PAINEL, PASTA_PROJETOS, env, env_bool, env_int
 from esteira.projeto import ESTADOS, Projeto
-from painel import contas, progresso, rotas_agenda, rotas_conta, rotas_etapas, rotas_legenda, sessao
+from painel import contas, progresso, rotas_agenda, rotas_apis, rotas_conta, rotas_etapas, rotas_legenda, sessao
 
 ESTATICOS = PASTA_PAINEL / "static"
 app = FastAPI(title="Esteira de Cortes", docs_url=None, redoc_url=None, openapi_url=None)
@@ -39,6 +39,7 @@ app.add_middleware(GZipMiddleware, minimum_size=800)
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=["127.0.0.1", "localhost", "[::1]",
                    *[h.strip() for h in env("PAINEL_HOSTS", "").split(",") if h.strip()]])
 app.include_router(rotas_agenda.router)
+app.include_router(rotas_apis.router)
 app.include_router(rotas_conta.router)
 app.include_router(rotas_etapas.router)
 app.include_router(rotas_legenda.router)

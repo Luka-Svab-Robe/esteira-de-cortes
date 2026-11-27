@@ -439,7 +439,7 @@ def canal_conectado_nao_vira_fonte_e_vigia_por_fonte():
         antes = (pasta / "fontes.yaml").read_text(encoding="utf-8")
         assert fontes.definir_monitorar(canal, "https://www.twitch.tv/outro", False) is None
         assert (pasta / "fontes.yaml").read_text(encoding="utf-8") == antes
-        assert fontes.localizar(canal, {"channel_id": "UCabc", "uploader_id": "@canal_x"}) is None
+        assert fontes.localizar(canal, {"channel_id": "UCabc", "uploader_id": "@canal_x"}, "youtube") is None
         assert fontes.remover(canal, "https://kick.com/b") and [f.nome for f in fontes.carregar(canal)] == ["A"]
 
 
@@ -525,7 +525,20 @@ def cadastro_de_criador_autorizado_usa_os_dados_da_live():
         f = fontes.adicionar(canal, "https://kick.com/criador_c", "autorizado", nome="Criador C",
                              autorizacao="Confirmado no painel", monitorar=False, info=info)
         assert f.plataforma == "kick" and "criador_c" in f.ids and not f.monitorar
-        assert fontes.localizar(canal, {"uploader_id": "Criador C"}) is not None
+        # B01: nome de exibição igual não identifica o criador
+        assert fontes.localizar(canal, {"uploader_id": "Criador C"}, "kick") is None
+        assert fontes.localizar(canal, {"channel": "Criador C", "uploader": "Criador C"}, "kick") is None
+        assert fontes.localizar(canal, {"uploader_id": "criador_c"}, "kick") is not None
+        # mesmo ID numa plataforma diferente não é a mesma fonte
+        assert fontes.localizar(canal, {"uploader_id": "criador_c"}, "twitch") is None
+        # um cadastro de outra plataforma com o mesmo ID não é substituído
+        twitch = fontes.Fonte(nome="Criador C (Twitch)", url="https://www.twitch.tv/criador_c", plataforma="twitch",
+                              tipo="autorizado", autorizacao="x", ids=["criador_c"])
+        fontes.salvar(canal, fontes.carregar(canal) + [twitch])
+        assert len(fontes.carregar(canal)) == 2
+        fontes.adicionar(canal, "https://kick.com/criador_c", "autorizado", nome="Criador C",
+                         autorizacao="Confirmado de novo", monitorar=False, info=info)
+        assert sorted(x.plataforma for x in fontes.carregar(canal)) == ["kick", "twitch"]
 
 
 @teste
@@ -731,6 +744,24 @@ def _rotas_de_fontes_recusam_pedidos_errados(servidor) -> None:
             assert exc.status_code == codigo, (rota.__name__, args, kwargs, exc.status_code, exc.detail)
         else:
             raise AssertionError(f"{rota.__name__} aceitou {args} {kwargs}")
+
+
+@teste
+def mapa_de_repeticao_fora_da_janela_nao_quebra_os_sinais():
+    """B02: intervalos antes do trecho (início negativo) e depois dele não escrevem no fim da lista nem geram erro."""
+    from esteira.cortes import analise
+
+    heatmap = [{"start_time": -40, "end_time": -5, "value": 9.0},   # totalmente antes do trecho
+               {"start_time": -3.5, "end_time": 2.2, "value": 4.0},  # cruza o início
+               {"start_time": 8, "end_time": 500, "value": 1.0}]     # cruza o fim
+    sinais = analise.montar_sinais(10, [], heatmap, [])
+    assert sinais["disponiveis"] == ["repetidos"], sinais
+    combinado = sinais["combinado"]
+    assert len(combinado) == 10
+    # o intervalo de -40..-5 (valor 9) não pode ter aparecido no fim da lista (índices 7..9)
+    sem_repeticao = analise.montar_sinais(10, [], [heatmap[0]], [])
+    assert sem_repeticao["disponiveis"] == ["repetidos"]
+    assert all(abs(x) < 1e-9 for x in sem_repeticao["combinado"]), sem_repeticao["combinado"]
 
 
 def main() -> int:

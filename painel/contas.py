@@ -39,9 +39,20 @@ _trava = threading.Lock()
 
 
 # ------------------------------------------------------------------ banco
+class _Conexao(sqlite3.Connection):
+    """F14: o "with" do sqlite3 não fecha a conexão. Esta fecha ao sair do bloco (o banco não fica travado
+    no Windows, e a pasta de dados pode ser apagada/restaurada)."""
+
+    def __exit__(self, tipo, valor, tb):
+        try:
+            return super().__exit__(tipo, valor, tb)
+        finally:
+            self.close()
+
+
 def _con() -> sqlite3.Connection:
     PASTA_DADOS.mkdir(parents=True, exist_ok=True)
-    con = sqlite3.connect(BANCO, timeout=15, isolation_level=None)
+    con = sqlite3.connect(BANCO, timeout=15, isolation_level=None, factory=_Conexao)
     con.row_factory = sqlite3.Row
     con.execute("PRAGMA journal_mode=WAL")
     con.execute("PRAGMA foreign_keys=ON")

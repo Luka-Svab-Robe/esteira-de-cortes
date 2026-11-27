@@ -12,6 +12,17 @@ from . import log, util
 
 ESTADOS_ATIVOS = ("em_producao", "pendente_revisao", "reprovado", "aprovado", "agendado", "publicado")
 
+
+class _Conexao(sqlite3.Connection):
+    """Conexão que, ao sair do "with", faz commit/rollback e também FECHA o arquivo (no Windows um banco aberto
+    não pode ser apagado)."""
+
+    def __exit__(self, tipo, valor, tb):
+        try:
+            return super().__exit__(tipo, valor, tb)
+        finally:
+            self.close()
+
 ESQUEMA = """
 CREATE TABLE IF NOT EXISTS videos (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -55,7 +66,8 @@ class Historico:
             con.executescript(ESQUEMA)
 
     def _con(self) -> sqlite3.Connection:
-        con = sqlite3.connect(str(self.caminho), timeout=30)
+        # F14: "with con:" do sqlite3 só faz commit/rollback e NÃO fecha; _Conexao fecha ao sair do bloco
+        con = sqlite3.connect(str(self.caminho), timeout=30, factory=_Conexao)
         con.row_factory = sqlite3.Row
         return con
 

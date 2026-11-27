@@ -11,6 +11,7 @@ import { ligarPublicacao, renderCanaisPublicacao } from "./publicacao.js";
 import { destacarDoEndereco, quandoPrecisarRecarregar, renderProjetos } from "./projetos.js";
 import { renderServicos } from "./servicos.js";
 import { renderAgendados } from "./agendados.js";
+import { atualizarApis, renderApis } from "./apis.js";
 
 const RAPIDO_MS = 2500, LENTO_MS = 15000;
 let timer = null;
@@ -47,7 +48,7 @@ function montarCasca() {
   quandoComecar(() => { carregar(true); const campo = $("#link-live"); if (campo) campo.value = ""; });
   ligarLink();
   quandoPrecisarRecarregar(() => carregar(true));
-  ligarCanal({ aoMudar: () => carregar(true), aoConectarYoutube: () => carregar(true) });
+  ligarCanal({ aoMudar: () => carregar(true), aoConectarYoutube: () => { carregar(true); if (estado.aba === "apis") atualizarApis(); } });
   ligarFontes({ aoMudar: () => carregar(true) });
   ligarPublicacao({ aoMudar: () => carregar(true) });
   ligarConta({ aoMudar: () => carregar(true).then(() => estado.aba === "conta" && renderConta()),
@@ -81,7 +82,7 @@ function renderUsuario() {
 }
 
 function aplicarEndereco() {
-  const m = /^#\/(painel|canais|agendados|servicos|conta)/.exec(location.hash);
+  const m = /^#\/(painel|canais|agendados|apis|servicos|conta)/.exec(location.hash);
   const aba = m ? m[1] : "painel";
   estado.aba = aba;
   for (const botao of document.querySelectorAll(".aba")) {
@@ -93,6 +94,7 @@ function aplicarEndereco() {
   if (aba === "servicos") renderServicos();
   if (aba === "canais") renderFontes(true);
   if (aba === "agendados") { renderCanaisPublicacao(true); renderAgendados(true); }
+  if (aba === "apis") renderApis();
   if (aba === "conta") renderConta();
   if (aba === "painel") destacarDoEndereco();
 }

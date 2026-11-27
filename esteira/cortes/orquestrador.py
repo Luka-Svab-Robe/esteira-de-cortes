@@ -93,7 +93,7 @@ def verificar(canal: Canal, url: str, forcar: bool = False, autorizacao: str | N
                           "Se a live ainda está no ar, espere ela terminar e use o link do vídeo salvo.")
     dados = ingestao.info(url)
     dono = dados.get("channel") or dados.get("uploader") or "desconhecido"
-    fonte = fontes.localizar(canal, dados)
+    fonte = fontes.localizar(canal, dados, plataforma=fontes.plataforma_da_url(url))
     if not fonte and autorizacao and autorizacao.strip():
         fonte = fontes.adicionar(canal, url_do_canal(dados, url) or url, "autorizado", nome=dono,
                                  autorizacao=autorizacao, monitorar=False, info=dados)

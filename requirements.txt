@@ -19,6 +19,7 @@ anthropic>=0.75
 kokoro-onnx>=0.4.9
 edge-tts>=7.0
 faster-whisper>=1.1
+av>=11,<19  # faster-whisper 1.2.x usa metadata_errors, removido no PyAV 19
 
 # Módulos 3/4 — renderização HTML (cenas e thumbnails)
 playwright>=1.48

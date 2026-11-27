@@ -91,9 +91,11 @@ def _normalizar_id(valor: str) -> str:
 
 
 def identificadores(info: dict) -> set[str]:
-    """IDs do canal dono de um vídeo/live, a partir do JSON do yt-dlp."""
-    candidatos = {info.get("channel_id"), info.get("uploader_id"), info.get("channel"), info.get("uploader"),
-                  info.get("channel_url"), info.get("uploader_url")}
+    """IDs estáveis do canal dono de um vídeo/live, a partir do JSON do yt-dlp.
+
+    Só entram IDs (channel_id, uploader_id) e os identificadores extraídos de URLs do canal. Nome de exibição
+    (channel, uploader, title) NÃO identifica ninguém: dois criadores podem ter o mesmo nome."""
+    candidatos = {info.get("channel_id"), info.get("uploader_id"), info.get("channel_url"), info.get("uploader_url")}
     ids = set()
     for c in candidatos:
         if not c:
@@ -102,12 +104,16 @@ def identificadores(info: dict) -> set[str]:
         m = re.search(r"(?:youtube\.com/(?:channel/|@)|twitch\.tv/|kick\.com/)([\w.-]+)", str(c))
         if m:
             ids.add(_normalizar_id(m.group(1)))
-    return {i for i in ids if i}
+    return {i for i in ids if i and " " not in i}
 
 
-def localizar(canal: Canal, info: dict) -> Fonte | None:
+def localizar(canal: Canal, info: dict, plataforma: str) -> Fonte | None:
+    """A fonte cujo ID estável bate com o da live, NA MESMA plataforma (um login da Twitch nunca casa com um
+    canal do YouTube). A plataforma é obrigatória de propósito: sem ela, o ID de outra plataforma casaria."""
     ids = identificadores(info)
     for fonte in carregar(canal):
+        if fonte.plataforma != plataforma:
+            continue
         if ids & {_normalizar_id(i) for i in fonte.ids}:
             return fonte
     return None
@@ -131,7 +137,8 @@ def adicionar(canal: Canal, url: str, tipo: str, nome: str = "", credito: str = 
                   autorizacao=autorizacao.strip(), monitorar=monitorar, ids=sorted(identificadores(info)))
     if not fonte.ids:
         raise ValueError(f"Não consegui identificar o canal de {url}.")
-    fontes = [f for f in carregar(canal) if not (set(f.ids) & set(fonte.ids))]
+    # substitui só o cadastro da mesma plataforma com o mesmo ID: outra plataforma com ID igual é outra fonte
+    fontes = [f for f in carregar(canal) if not (f.plataforma == fonte.plataforma and set(f.ids) & set(fonte.ids))]
     fontes.append(fonte)
     salvar(canal, fontes)
     return fonte
