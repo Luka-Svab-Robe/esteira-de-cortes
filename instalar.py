@@ -198,7 +198,10 @@ def main() -> None:
     criar_env()
     baixar_modelos(args)
     passo("Diagnóstico final")
-    rodar([PY_VENV, RAIZ / "esteira.py", "diagnostico"], env={**os.environ, "ESTEIRA_SEM_VENV": "1"})
+    # F13: só anuncia conclusão se o diagnóstico não achou problema crítico (ele sai com código 1 nesse caso)
+    if rodar([PY_VENV, RAIZ / "esteira.py", "diagnostico"], env={**os.environ, "ESTEIRA_SEM_VENV": "1"}) != 0:
+        sys.exit("\n✖ Instalação INCOMPLETA: há problema(s) crítico(s) listados acima. Corrija-o(s) e rode "
+                 "python instalar.py de novo.")
     print("\nPronto! Abra esta pasta no Claude Code (ou outro agente) e peça, por exemplo:\n"
           "  “Crie um canal novo para mim” e depois “Crie um vídeo sobre o mistério do navio Mary Celeste”.")
 
